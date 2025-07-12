@@ -1,29 +1,43 @@
-"use client";
+import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
+import { GameCard } from "@/components/GameCard";
+import { GameFilter } from "@/components/GameFilter";
 
-import { createBrowserClient } from "@supabase/ssr";
-import { useRouter } from "next/navigation";
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: { players?: string; search?: string };
+}) {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+  let query = supabase.from("games").select("*");
 
-export default function Home() {
-    const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-  const router = useRouter();
+  if (searchParams.search) {
+    query = query.ilike("name", `%${searchParams.search}%`);
+  }
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
-  };
+  if (searchParams.players) {
+    const playerCount = parseInt(searchParams.players, 10);
+    if (!isNaN(playerCount)) {
+      query = query
+        .lte("min_players", playerCount)
+        .gte("max_players", playerCount);
+    }
+  }
+
+  const { data: games } = await query;
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <button
-        onClick={handleSignOut}
-        className="px-4 py-2 font-bold text-white bg-blue-500 rounded hover:bg-blue-700"
-      >
-        Sign Out
-      </button>
-    </main>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">게임 목록</h1>
+      <GameFilter />
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {games?.map((game) => (
+          <GameCard key={game.id} game={game} />
+        ))}
+      </div>
+    </div>
   );
 }
+
 
