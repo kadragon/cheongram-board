@@ -2,6 +2,7 @@ import { GameList } from "@/components/GameList";
 import { createClient } from "@/utils/supabase/server";
 import { AuthButton } from "@/components/AuthButton";
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 60;
 
 export default async function HomePage() {

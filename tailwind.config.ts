@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss"
+import { type PluginAPI } from "tailwindcss/types/config"
 const plugin = require("tailwindcss/plugin")
 
 const config = {
@@ -79,7 +80,7 @@ const config = {
   },
   plugins: [
     require("tailwindcss-animate"),
-    plugin(function ({ matchUtilities, theme }) {
+    plugin(function ({ matchUtilities, theme }: PluginAPI) {
       matchUtilities(
         {
           'text-shadow': (value) => ({
