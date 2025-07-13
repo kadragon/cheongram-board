@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "build:worker": "opennext build",
+    "build:worker": "npx opennextjs-cloudflare build",
     "deploy": "npm run build:worker && wrangler deploy"
   },
   "keywords": [],
