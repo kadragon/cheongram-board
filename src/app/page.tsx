@@ -1,7 +1,9 @@
+import { GameFilter } from "@/components/GameFilter";
+import { GameList } from "@/components/GameList";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
-import { GameCard } from "@/components/GameCard";
-import { GameFilter } from "@/components/GameFilter";
+
+export const dynamic = 'force-dynamic';
 
 export default async function HomePage({
   searchParams,
@@ -31,11 +33,7 @@ export default async function HomePage({
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">게임 목록</h1>
       <GameFilter />
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {games?.map((game) => (
-          <GameCard key={game.id} game={game} />
-        ))}
-      </div>
+      <GameList games={games} />
     </div>
   );
 }
