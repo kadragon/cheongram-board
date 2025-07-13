@@ -3,15 +3,14 @@ import { GameList } from "@/components/GameList";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export default async function HomePage({
   searchParams,
 }: {
   searchParams: { players?: string; search?: string };
 }) {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = createClient();
   let query = supabase.from("games").select("*");
 
   if (searchParams.search) {
