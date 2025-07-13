@@ -1,0 +1,9 @@
+name = "cheongram-board"
+main = ".open-next/worker.js"
+compatibility_date = "2024-07-13"
+
+[site]
+bucket = ".open-next/assets"
+
+[compatibility_flags]
+nodejs_compat = true
