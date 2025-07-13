@@ -1,12 +1,13 @@
 import { createServerComponentClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import React from "react";
 
-export default async function GameDetailPage({
-  params,
-}: {
+interface GameDetailPageProps {
   params: { id: string };
-}) {
+}
+
+const GameDetailPage: React.FC<GameDetailPageProps> = async ({ params }) => {
   const supabase = createServerComponentClient({ cookies });
   const { data: game } = await supabase
     .from("games")
@@ -30,4 +31,6 @@ export default async function GameDetailPage({
       </div>
     </div>
   );
-}
+};
+
+export default GameDetailPage;

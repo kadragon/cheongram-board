@@ -1,10 +1,11 @@
 import { createClient } from "@/utils/supabase/server";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: any
 ) {
+  const { params } = context;
   const supabase = createClient();
   const { data, error } = await supabase
     .from("games")
@@ -20,9 +21,10 @@ export async function GET(
 }
 
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: any
 ) {
+  const { params } = context;
   const supabase = createClient();
   const {
     data: { session },
@@ -48,9 +50,10 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: any
 ) {
+  const { params } = context;
   const supabase = createClient();
   const {
     data: { session },
@@ -68,3 +71,4 @@ export async function DELETE(
 
   return new Response(null, { status: 204 });
 }
+

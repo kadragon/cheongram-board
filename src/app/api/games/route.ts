@@ -4,7 +4,10 @@ import { cookies } from "next/headers";
 
 export async function GET() {
   const supabase = createClient();
-  const { data: games, error } = await supabase.from("games").select("*");
+    const { data: games, error } = await supabase
+    .from("games")
+    .select("*, rentals!left(*)")
+    .filter("rentals.returned_at", "is", null);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
