@@ -30,7 +30,7 @@ export default async function HomePage() {
         </h1>
       </div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">게임 목록</h2>
+        <h2 className="text-2xl font-bold">보유 게임 정보</h2>
         <AuthButton />
       </div>
       <GameList games={gamesWithStatus} />

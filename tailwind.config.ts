@@ -19,6 +19,9 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["var(--font-pretendard)"],
+      },
       textShadow: {
         md: '2px 2px 4px rgb(0 0 0 / 0.25)',
       },

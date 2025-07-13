@@ -35,7 +35,14 @@ export function AuthButton() {
   };
 
   if (isAdmin) {
-    return <Button onClick={handleLogout}>Logout</Button>;
+    return (
+      <div className="flex gap-2">
+        <Link href="/admin">
+          <Button variant="outline">Admin Page</Button>
+        </Link>
+        <Button onClick={handleLogout}>Logout</Button>
+      </div>
+    );
   }
 
   return (
