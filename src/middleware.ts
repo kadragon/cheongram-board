@@ -28,16 +28,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // If the user is not logged in and is not on the login or auth callback page,
-  // redirect them to the login page.
-  if (
-    !user &&
-    request.nextUrl.pathname !== '/login' &&
-    !request.nextUrl.pathname.startsWith('/auth')
-  ) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
   return response
 }
 

@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss"
+const plugin = require("tailwindcss/plugin")
 
 const config = {
   darkMode: ["class"],
@@ -17,6 +18,9 @@ const config = {
       },
     },
     extend: {
+      textShadow: {
+        md: '2px 2px 4px rgb(0 0 0 / 0.25)',
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -73,7 +77,19 @@ const config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    plugin(function ({ matchUtilities, theme }) {
+      matchUtilities(
+        {
+          'text-shadow': (value) => ({
+            textShadow: value,
+          }),
+        },
+        { values: theme('textShadow') }
+      )
+    }),
+  ],
 } satisfies Config
 
 export default config

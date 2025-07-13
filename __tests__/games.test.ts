@@ -1,10 +1,17 @@
-import { createRouteHandlerClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { GET, POST } from "@/app/api/games/route";
 import { NextResponse } from "next/server";
 
 // Mock Supabase
 jest.mock("@supabase/ssr", () => ({
-  createRouteHandlerClient: jest.fn(),
+  createServerClient: jest.fn(),
+}));
+
+jest.mock("next/headers", () => ({
+  cookies: jest.fn(() => ({
+    get: jest.fn(),
+    set: jest.fn(),
+  })),
 }));
 
 const mockSupabase = {
@@ -18,7 +25,7 @@ const mockSupabase = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  (createRouteHandlerClient as jest.Mock).mockReturnValue(mockSupabase);
+  (createServerClient as jest.Mock).mockReturnValue(mockSupabase);
 });
 
 describe("Game Management API (/api/games)", () => {

@@ -1,9 +1,14 @@
 import { GameCard } from "@/components/GameCard";
 
-// Assuming GameCard expects a 'game' prop with at least an 'id'.
-// You can expand this type based on your actual 'games' table schema.
 type Game = {
   id: number;
+  title: string;
+  image_url: string;
+  koreaboardgames_url: string;
+  is_rented: boolean;
+  min_players: number;
+  max_players: number;
+  play_time: number;
   [key: string]: any;
 };
 

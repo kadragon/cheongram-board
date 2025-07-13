@@ -85,7 +85,7 @@ export function GamesTable() {
             <DialogHeader>
               <DialogTitle>{selectedGame ? "Edit Game" : "Add Game"}</DialogTitle>
             </DialogHeader>
-            <GameForm game={selectedGame} onSave={handleSave} />
+            <GameForm initialData={selectedGame} onSubmit={handleSave} />
           </DialogContent>
         </Dialog>
       </div>
@@ -146,7 +146,7 @@ export function GamesTable() {
                     <DialogHeader>
                       <DialogTitle>Edit Game</DialogTitle>
                     </DialogHeader>
-                    <GameForm game={selectedGame} onSave={handleSave} />
+                    <GameForm initialData={selectedGame} onSubmit={handleSave} />
                   </DialogContent>
                 </Dialog>
                 <Button variant="destructive" size="sm" onClick={() => handleDelete(game.id)}>Delete</Button>
