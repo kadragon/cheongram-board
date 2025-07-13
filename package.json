@@ -10,7 +10,8 @@
     "lint": "next lint",
     "test": "jest",
     "build:worker": "npx opennextjs-cloudflare build",
-    "deploy": "npm run build:worker && wrangler deploy"
+    "preview": "npm run build:worker && npx wrangler dev",
+    "deploy": "npm run build:worker && npx wrangler deploy"
   },
   "keywords": [],
   "author": "",

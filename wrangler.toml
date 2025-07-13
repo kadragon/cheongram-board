@@ -1,8 +1,8 @@
 name = "cheongram-board"
 main = ".open-next/worker.js"
-compatibility_date = "2024-07-13"
-
-[site]
-bucket = ".open-next/assets"
-
+compatibility_date = "2025-07-13"
 compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
