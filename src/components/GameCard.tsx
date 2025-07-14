@@ -8,6 +8,7 @@ interface Game {
   image_url: string;
   koreaboardgames_url: string;
   is_rented: boolean;
+  return_date: string | null;
   min_players: number;
   max_players: number;
   play_time: number;
@@ -26,7 +27,7 @@ export function GameCard({ game }: { game: Game }) {
       </CardContent>
       <CardFooter className="flex justify-between items-center text-sm text-gray-500">
         {game.is_rented ? (
-          <Badge variant="destructive">대여중</Badge>
+          <Badge variant="destructive">대여중 (~{new Date(game.return_date!).toLocaleDateString()})</Badge>
         ) : (
           <Badge variant="secondary">대여 가능</Badge>
         )}
