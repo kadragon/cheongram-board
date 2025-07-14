@@ -6,10 +6,10 @@ type Game = {
   image_url: string;
   koreaboardgames_url: string;
   is_rented: boolean;
+  due_date: string | null;
   min_players: number;
   max_players: number;
   play_time: number;
-  [key: string]: any;
 };
 
 export function GameList({ games }: { games: Game[] | null }) {

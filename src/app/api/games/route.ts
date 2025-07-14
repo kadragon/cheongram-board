@@ -6,7 +6,7 @@ export async function GET() {
   const supabase = createClient();
   const { data: games, error } = await supabase
     .from("games")
-    .select("*, rentals(returned_at, return_date)");
+    .select("*, rentals(returned_at, due_date)");
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -15,7 +15,7 @@ export async function GET() {
   const gamesWithStatus = games.map((game) => {
     const activeRental = game.rentals.find((rental: { returned_at: string | null }) => rental.returned_at === null);
     const is_rented = !!activeRental;
-    const return_date = activeRental ? activeRental.return_date : null;
+    const return_date = activeRental ? activeRental.due_date : null;
     // eslint-disable-next-line no-unused-vars
     const { rentals, ...rest } = game;
     return { ...rest, is_rented, return_date };

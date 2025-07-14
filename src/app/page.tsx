@@ -7,7 +7,7 @@ export const revalidate = 60;
 
 export default async function HomePage() {
   const supabase = createClient();
-  const { data, error } = await supabase.from("games").select("*, rentals(returned_at)");
+  const { data, error } = await supabase.from("games").select("*, rentals(returned_at, due_date)");
 
   if (error) {
     console.error("Error fetching games:", error);
@@ -17,9 +17,9 @@ export default async function HomePage() {
 
   const gamesWithStatus = data.map((game) => {
     const is_rented = game.rentals.some((rental: { returned_at: string | null }) => rental.returned_at === null);
-    // eslint-disable-next-line no-unused-vars
+    const due_date = game.rentals.find((rental: { returned_at: string | null }) => rental.returned_at === null)?.due_date || null;
     const { rentals, ...rest } = game;
-    return { ...rest, is_rented };
+    return { ...rest, is_rented, due_date };
   });
 
   return (

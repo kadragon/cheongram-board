@@ -8,13 +8,31 @@ interface Game {
   image_url: string;
   koreaboardgames_url: string;
   is_rented: boolean;
-  return_date: string | null;
+  due_date: string | null;
   min_players: number;
   max_players: number;
   play_time: number;
 }
 
 export function GameCard({ game }: { game: Game }) {
+  const getReturnDateString = () => {
+    if (!game.due_date) {
+      return null;
+    }
+
+    console.log("Due date:", game.due_date);
+
+    const date = new Date(game.due_date);
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `(~${month}-${day})`;
+  };
+
+  const returnDateDisplay = getReturnDateString();
+
   return (
     <Card className="flex flex-col">
       <CardHeader>
@@ -27,7 +45,7 @@ export function GameCard({ game }: { game: Game }) {
       </CardContent>
       <CardFooter className="flex justify-between items-center text-sm text-gray-500">
         {game.is_rented ? (
-          <Badge variant="destructive">대여중 (~{new Date(game.return_date!).toLocaleDateString()})</Badge>
+          <Badge variant="destructive">대여중 {returnDateDisplay}</Badge>
         ) : (
           <Badge variant="secondary">대여 가능</Badge>
         )}
