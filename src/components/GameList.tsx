@@ -6,7 +6,7 @@ type Game = {
   image_url: string;
   koreaboardgames_url: string;
   is_rented: boolean;
-  return_date: string | null;
+  due_date: string | null;
   min_players: number;
   max_players: number;
   play_time: number;
