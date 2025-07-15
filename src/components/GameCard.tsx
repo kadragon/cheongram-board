@@ -5,6 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card"
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { X } from "lucide-react"; // Import the X icon
+import { useRouter } from 'next/navigation';
 
 interface Game {
   id: number;
@@ -19,6 +20,7 @@ interface Game {
 }
 
 export function GameCard({ game, isAdmin }: { game: Game, isAdmin: boolean }) {
+  const router = useRouter();
   const getReturnDateString = () => {
     if (!game.due_date) {
       return null;
@@ -42,7 +44,7 @@ export function GameCard({ game, isAdmin }: { game: Game, isAdmin: boolean }) {
       });
 
       if (response.ok) {
-        window.location.reload();
+        router.refresh();
       } else {
         alert("게임 삭제에 실패했습니다.");
       }
