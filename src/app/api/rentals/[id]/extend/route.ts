@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 async function checkAdmin(supabase: any) {
   const {
@@ -17,13 +17,16 @@ async function checkAdmin(supabase: any) {
 }
 
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   const supabase = createClient();
-  if (!await checkAdmin(supabase)) {
-    return NextResponse.json({ error: "Forbidden: Not an admin" }, { status: 403 });
+  if (!(await checkAdmin(supabase))) {
+    return NextResponse.json(
+      { error: "Forbidden: Not an admin" },
+      { status: 403 }
+    );
   }
 
   const { data: rental, error: rentalError } = await supabase
