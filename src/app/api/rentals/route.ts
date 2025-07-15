@@ -1,14 +1,13 @@
 import { createClient } from "@/utils/supabase/server";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
+import { checkAdmin } from "@/utils/auth";
 
-export async function GET() {
+
+
+export async function GET(request: NextRequest) {
   const supabase = createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!await checkAdmin(supabase)) {
+    return NextResponse.json({ error: "Forbidden: Not an admin" }, { status: 403 });
   }
 
   const { data: rentals, error } = await supabase.from("rentals").select(`
@@ -23,14 +22,10 @@ export async function GET() {
   return NextResponse.json(rentals);
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const supabase = createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!await checkAdmin(supabase)) {
+    return NextResponse.json({ error: "Forbidden: Not an admin" }, { status: 403 });
   }
 
   const { renter_name, rental_date, game_id } = await request.json();

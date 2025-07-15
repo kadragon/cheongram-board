@@ -1,5 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse, NextRequest } from "next/server";
+import { checkAdmin } from "@/utils/auth";
+
+
 
 export async function GET(
   request: NextRequest,
@@ -7,20 +10,27 @@ export async function GET(
 ) {
   const { id } = await context.params;
   const supabase = createClient();
+  if (!await checkAdmin(supabase)) {
+    return NextResponse.json({ error: "Forbidden: Not an admin" }, { status: 403 });
+  }
+
   const { data, error } = await supabase
-    .from("games")
-    .select("*")
+    .from("rentals")
+    .select(
+      `
+      *,
+      games (*)
+    `
+    )
     .eq("id", id)
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 404 });
   }
 
   return NextResponse.json(data);
 }
-
-import { checkAdmin } from "@/utils/auth";
 
 export async function PUT(
   request: NextRequest,
@@ -28,18 +38,16 @@ export async function PUT(
 ) {
   const { id } = await context.params;
   const supabase = createClient();
-  
   if (!await checkAdmin(supabase)) {
     return NextResponse.json({ error: "Forbidden: Not an admin" }, { status: 403 });
   }
 
   const body = await request.json();
   const { data, error } = await supabase
-    .from("games")
+    .from("rentals")
     .update(body)
     .eq("id", id)
-    .select()
-    .single();
+    .select();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -54,12 +62,11 @@ export async function DELETE(
 ) {
   const { id } = await context.params;
   const supabase = createClient();
-
   if (!await checkAdmin(supabase)) {
     return NextResponse.json({ error: "Forbidden: Not an admin" }, { status: 403 });
   }
 
-  const { error } = await supabase.from("games").delete().eq("id", id);
+  const { error } = await supabase.from("rentals").delete().eq("id", id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -67,4 +74,3 @@ export async function DELETE(
 
   return new Response(null, { status: 204 });
 }
-

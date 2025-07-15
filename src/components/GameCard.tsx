@@ -1,6 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { X } from "lucide-react"; // Import the X icon
+import { useRouter } from 'next/navigation';
 
 interface Game {
   id: number;
@@ -14,13 +19,12 @@ interface Game {
   play_time: number;
 }
 
-export function GameCard({ game }: { game: Game }) {
+export function GameCard({ game, isAdmin }: { game: Game, isAdmin: boolean }) {
+  const router = useRouter();
   const getReturnDateString = () => {
     if (!game.due_date) {
       return null;
     }
-
-    console.log("Due date:", game.due_date);
 
     const date = new Date(game.due_date);
     if (isNaN(date.getTime())) {
@@ -33,10 +37,34 @@ export function GameCard({ game }: { game: Game }) {
 
   const returnDateDisplay = getReturnDateString();
 
+  const handleDelete = async () => {
+    if (confirm(`'${game.title}' 게임을 삭제하시겠습니까?`)) {
+      const response = await fetch(`/api/games/${game.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        router.refresh();
+      } else {
+        alert("게임 삭제에 실패했습니다.");
+      }
+    }
+  };
+
   return (
-    <Card className="flex flex-col">
-      <CardHeader>
+    <Card className="flex flex-col relative">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-xl font-bold text-shadow-md">{game.title}</CardTitle>
+        {isAdmin && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDelete}
+            className="absolute top-2 right-2 h-6 w-6 text-gray-500 hover:text-red-500"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="flex-grow">
         <Link href={game.koreaboardgames_url || '#'} target="_blank" rel="noopener noreferrer">

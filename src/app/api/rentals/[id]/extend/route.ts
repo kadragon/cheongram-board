@@ -1,28 +1,40 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse, NextRequest } from "next/server";
+import { checkAdmin } from "@/utils/auth";
 
-export async function PUT(
+
+
+export async function POST(
   request: NextRequest,
-  context: any
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { params } = context;
+  const { id } = await params;
   const supabase = createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await checkAdmin(supabase))) {
+    return NextResponse.json(
+      { error: "Forbidden: Not an admin" },
+      { status: 403 }
+    );
   }
 
-  const { due_date } = await request.json();
+  const { data: rental, error: rentalError } = await supabase
+    .from("rentals")
+    .select("due_date")
+    .eq("id", id)
+    .single();
+
+  if (rentalError) {
+    return NextResponse.json({ error: rentalError.message }, { status: 404 });
+  }
+
+  const newDueDate = new Date(rental.due_date);
+  newDueDate.setDate(newDueDate.getDate() + 14);
 
   const { data, error } = await supabase
     .from("rentals")
-    .update({ due_date })
-    .eq("id", params.id)
-    .select()
-    .single();
+    .update({ due_date: newDueDate.toISOString().split("T")[0] })
+    .eq("id", id)
+    .select();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -30,4 +42,3 @@ export async function PUT(
 
   return NextResponse.json(data);
 }
-

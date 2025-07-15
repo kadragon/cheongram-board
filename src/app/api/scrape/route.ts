@@ -1,7 +1,16 @@
-import { NextResponse } from "next/server";
+import { createClient } from "@/utils/supabase/server";
+import { NextResponse, NextRequest } from "next/server";
 import { scrapeGame } from "@/utils/scraper";
+import { checkAdmin } from "@/utils/auth";
 
-export async function POST(request: Request) {
+
+
+export async function POST(request: NextRequest) {
+  const supabase = createClient();
+  if (!await checkAdmin(supabase)) {
+    return NextResponse.json({ error: "Forbidden: Not an admin" }, { status: 403 });
+  }
+
   const { url } = await request.json();
   if (!url) {
     return NextResponse.json({ error: "URL is required" }, { status: 400 });

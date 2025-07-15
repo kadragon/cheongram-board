@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { NextResponse, NextRequest } from "next/server";
+import { checkAdmin } from "@/utils/auth";
 
 export async function GET() {
   const supabase = createClient();
@@ -13,10 +13,12 @@ export async function GET() {
   }
 
   const gamesWithStatus = games.map((game) => {
-    const activeRental = game.rentals.find((rental: { returned_at: string | null }) => rental.returned_at === null);
+    const activeRental = game.rentals.find(
+      (rental: { returned_at: string | null }) => rental.returned_at === null
+    );
     const is_rented = !!activeRental;
     const return_date = activeRental ? activeRental.due_date : null;
-    // eslint-disable-next-line no-unused-vars
+
     const { rentals, ...rest } = game;
     return { ...rest, is_rented, return_date };
   });
@@ -24,23 +26,23 @@ export async function GET() {
   return NextResponse.json(gamesWithStatus);
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const supabase = createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!await checkAdmin(supabase)) {
+    return NextResponse.json({ error: "Forbidden: Not an admin" }, { status: 403 });
   }
 
   const body = await request.json();
-  const { error } = await supabase.from("games").insert(body);
+  const { data: newGame, error } = await supabase
+    .from("games")
+    .insert(body)
+    .select()
+    .single();
 
   if (error) {
     console.error("Supabase insert error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return new NextResponse(null, { status: 204 });
+  return NextResponse.json(newGame, { status: 201 });
 }

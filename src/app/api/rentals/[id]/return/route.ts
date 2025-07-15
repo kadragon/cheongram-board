@@ -1,28 +1,24 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse, NextRequest } from "next/server";
+import { checkAdmin } from "@/utils/auth";
 
-export async function PUT(
+
+
+export async function POST(
   request: NextRequest,
-  context: any
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { params } = context;
+  const { id } = await context.params;
   const supabase = createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!await checkAdmin(supabase)) {
+    return NextResponse.json({ error: "Forbidden: Not an admin" }, { status: 403 });
   }
 
   const { data, error } = await supabase
     .from("rentals")
-    .update({ returned_at: new Date().toISOString(), status: "returned" })
-    .eq("id", params.id)
-    .select()
-    .single();
-
-  // TODO: Add logic to update the game's status back to 'available'
+    .update({ returned_at: new Date().toISOString() })
+    .eq("id", id)
+    .select();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
