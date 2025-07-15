@@ -7,6 +7,18 @@ export const revalidate = 60;
 
 export default async function HomePage() {
   const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let isAdmin = false;
+  if (user) {
+    const { data: userDetails } = await supabase
+      .from('users')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+    isAdmin = userDetails?.is_admin || false;
+  }
+
   const { data, error } = await supabase.from("games").select("*, rentals(returned_at, due_date)");
 
   if (error) {
@@ -33,7 +45,7 @@ export default async function HomePage() {
         <h2 className="text-2xl font-bold">보유 게임 정보</h2>
         <AuthButton />
       </div>
-      <GameList games={gamesWithStatus} />
+      <GameList games={gamesWithStatus} isAdmin={isAdmin} />
     </div>
   );
 }

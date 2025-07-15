@@ -1,14 +1,23 @@
 import { createClient } from "@/utils/supabase/server";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
-export async function GET() {
+async function checkAdmin(supabase: any) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data: userDetails } = await supabase
+    .from('users')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single();
+
+  return userDetails?.is_admin || false;
+}
+
+export async function GET(request: NextRequest) {
   const supabase = createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!await checkAdmin(supabase)) {
+    return NextResponse.json({ error: "Forbidden: Not an admin" }, { status: 403 });
   }
 
   const { data: rentals, error } = await supabase.from("rentals").select(`
@@ -23,14 +32,10 @@ export async function GET() {
   return NextResponse.json(rentals);
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const supabase = createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!await checkAdmin(supabase)) {
+    return NextResponse.json({ error: "Forbidden: Not an admin" }, { status: 403 });
   }
 
   const { renter_name, rental_date, game_id } = await request.json();
