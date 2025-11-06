@@ -41,10 +41,9 @@ export const gameCreateSchema = z.object({
     .int('플레이 시간은 정수여야 합니다.')
     .min(1, '플레이 시간은 1분 이상이어야 합니다.')
     .max(1440, '플레이 시간은 1440분(24시간)을 초과할 수 없습니다.'),
-  complexity: z.number()
-    .min(1, '복잡도는 1 이상이어야 합니다.')
-    .max(5, '복잡도는 5 이하여야 합니다.')
-    .optional(),
+  complexity: z.enum(['low', 'medium', 'high'], {
+    errorMap: () => ({ message: '복잡도는 low, medium, high 중 하나여야 합니다.' })
+  }).optional(),
   categories: z.array(z.string()).optional(),
 }).refine(
   (data) => data.min_players <= data.max_players,
@@ -115,7 +114,7 @@ export const gameSearchSchema = z.object({
   max_players: z.number().int().min(1).max(50).optional(),
   min_play_time: z.number().int().min(1).max(1440).optional(),
   max_play_time: z.number().int().min(1).max(1440).optional(),
-  complexity: z.number().min(1).max(5).optional(),
+  complexity: z.enum(['low', 'medium', 'high']).optional(),
   categories: z.array(z.string()).optional(),
   availability: z.enum(['available', 'rented', 'all']).optional(),
   sort_by: z.enum(['title', 'min_players', 'max_players', 'play_time', 'created_at']).optional(),

@@ -307,14 +307,32 @@ export class D1Adapter {
 
   /**
    * Delete a game
+   * Checks for existence and active rentals before deletion
+   * @returns true if game was deleted, false if game not found
+   * @throws Error if game has active rentals or deletion fails
    */
-  async deleteGame(id: number): Promise<void> {
+  async deleteGame(id: number): Promise<boolean> {
+    // Check if game exists
+    const existingGame = await this.getGame(id);
+    if (!existingGame) {
+      return false;
+    }
+
+    // Check for active rentals
+    const isRented = await this.isGameRented(id);
+    if (isRented) {
+      throw new Error('Cannot delete game with active rentals');
+    }
+
+    // Delete the game
     const sql = 'DELETE FROM games WHERE id = ?';
     const result = await this.db.prepare(sql).bind(id).run();
 
     if (!result.success) {
       throw new Error('Failed to delete game');
     }
+
+    return true;
   }
 
   // ==========================================================================
