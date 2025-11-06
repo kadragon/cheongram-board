@@ -18,4 +18,22 @@
   Owner: TBD
   Status: open
 
+- Trace: SPEC-migration-supabase-to-cloudflare-1
+  Unclear Field: Supabase 데이터 마이그레이션 시점
+  Proposed Clarification: 마이그레이션 중 새로운 데이터가 추가될 경우 동기화 전략 필요 (parallel run 기간 동안)
+  Owner: migration-team
+  Status: open
+
+- Trace: SPEC-migration-supabase-to-cloudflare-1
+  Unclear Field: 기존 Supabase 구독 해지 시점
+  Proposed Clarification: D1 전환 후 Supabase를 언제까지 유지할지 결정 필요 (30일? 60일?)
+  Owner: migration-team
+  Status: open
+
+- Trace: SPEC-migration-supabase-to-cloudflare-1
+  Unclear Field: 프로덕션 마이그레이션 중 downtime 허용 여부
+  Proposed Clarification: zero-downtime 필수인지, 짧은 점검 시간 허용 가능한지 확인 필요
+  Owner: migration-team
+  Status: open
+
 > Traceability Reminder: Add concrete SPEC-ID/TEST-ID once 정의 완료 시 갱신
