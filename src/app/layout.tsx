@@ -2,6 +2,8 @@ import "@/app/globals.css";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { ToastContainer } from "@/components/ui/toast";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const pretendard = localFont({
   src: "../..//node_modules/pretendard/dist/web/static/woff2/Pretendard-Regular.woff2",
@@ -31,7 +33,10 @@ export default function RootLayout({
           pretendard.className
         )}
       >
-        {children}
+        <ErrorBoundary>
+          {children}
+          <ToastContainer />
+        </ErrorBoundary>
       </body>
     </html>
   );
