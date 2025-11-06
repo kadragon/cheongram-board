@@ -49,7 +49,7 @@ Establish a Git pre-commit workflow that enforces repository quality gates by ru
 ## 4. Tooling Interface
 
 ### 4.1 Commands
-- `npm run lint` — invokes Next.js ESLint configuration.
+- `npm run lint` — invokes Next.js ESLint configuration with `NEXT_DISABLE_ESLINT_TUI=1` to suppress interactive prompts.
 - `npm run typecheck` — runs the TypeScript compiler in no-emit mode.
 
 ### 4.2 Hook Location
@@ -57,8 +57,9 @@ Establish a Git pre-commit workflow that enforces repository quality gates by ru
 
 ## 5. Data & State
 - Requires npm script `typecheck` defined in `package.json`.
+- `.eslintrc.json` must extend `next/core-web-vitals` so `next lint` can run non-interactively.
 - Hook script must be executable (`chmod +x`).
-- Hook installation driven via `npm run prepare` which installs Husky hooks locally.
+- devDependency `husky` ensures Git `core.hooksPath` is set via `npm run prepare`.
 
 ## 6. Tracing
 
@@ -69,4 +70,4 @@ Establish a Git pre-commit workflow that enforces repository quality gates by ru
 | SPEC-devtool-pre-commit-1 | TEST-devtool-pre-commit-skip | `.husky/pre-commit` env skip logic |
 
 ## 7. Open Questions
-- None currently identified.
+- Outstanding TypeScript errors in legacy modules currently fail `npm run typecheck`; tracked via `.tasks/backlog.md`.

@@ -1,126 +1,80 @@
-import { createClient } from "@/utils/supabase/server";
 import { NextResponse, NextRequest } from "next/server";
 import { checkAdmin } from "@/utils/auth";
 import { handleAPIError, createSuccessResponse } from "@/lib/api-error-handler";
-import { handleSupabaseError, createAuthError, AppError, ErrorCode } from "@/lib/errors";
+import { createAuthError, AppError, ErrorCode } from "@/lib/errors";
 import { rentalCreateSchema, rentalSearchSchema } from "@/lib/validation/schemas";
 import { validateRequestBody, validateSearchParams } from "@/lib/validation/middleware";
 import { apiLogger } from "@/lib/logging/logger";
 import { performanceMonitor } from "@/lib/monitoring/performance";
 import { auditLogger } from "@/lib/logging/audit";
 import { extractRequestContext, dataEventLogger } from "@/lib/logging/integration";
+import { getD1Adapter } from "@/utils/d1/server";
+import type { RentalFilters } from "@/lib/db/types";
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
   const context = extractRequestContext(request, 'admin'); // In real app, get from auth
-  
+
   try {
     apiLogger.apiRequest('GET', '/api/rentals', { requestId: context.requestId });
-    
-    const supabase = createClient();
-    
-    if (!await checkAdmin(supabase)) {
-      auditLogger.logAccessDenied('admin', 'rentals', 'list', {
-        ipAddress: context.ipAddress,
-        requestId: context.requestId,
-      });
-      throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
-    }
+
+    // TODO: Implement Cloudflare Access authentication in Phase 4 (TASK-migration-010)
+    // const isAdmin = await checkCloudflareAccessAdmin(request);
+    // if (!isAdmin) {
+    //   auditLogger.logAccessDenied('admin', 'rentals', 'list', {
+    //     ipAddress: context.ipAddress,
+    //     requestId: context.requestId,
+    //   });
+    //   throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
+    // }
+
+    const adapter = getD1Adapter();
 
     // Validate search parameters
     const searchParams = validateSearchParams(request, rentalSearchSchema);
 
+    // Convert search params to RentalFilters format
+    const filters: RentalFilters = {
+      query: searchParams.query,
+      game_id: searchParams.game_id,
+      // Filter out 'all' as it means no filter
+      status: searchParams.status === 'all' ? undefined : searchParams.status,
+      date_from: searchParams.date_from,
+      date_to: searchParams.date_to,
+      sort_by: searchParams.sort_by,
+      sort_order: searchParams.sort_order,
+      page: searchParams.page || 1,
+      limit: searchParams.limit || 20,
+    };
+
     // Measure database query performance
-    const queryResult = await performanceMonitor.measureAsync(
+    const result = await performanceMonitor.measureAsync(
       'rentals_list_query',
       async () => {
-        let query = supabase
-          .from("rentals")
-          .select("*, games (*)", { count: "exact" });
-
-        // Apply search filters
-        if (searchParams.query) {
-          query = query.ilike('name', `%${searchParams.query}%`);
-        }
-
-        if (searchParams.game_id) {
-          query = query.eq('game_id', searchParams.game_id);
-        }
-
-        if (searchParams.status) {
-          switch (searchParams.status) {
-            case 'active':
-              query = query.is('returned_at', null);
-              break;
-            case 'returned':
-              query = query.not('returned_at', 'is', null);
-              break;
-            case 'overdue':
-              query = query.is('returned_at', null).lt('due_date', new Date().toISOString().split('T')[0]);
-              break;
-          }
-        }
-
-        if (searchParams.date_from) {
-          query = query.gte('rented_at', searchParams.date_from);
-        }
-
-        if (searchParams.date_to) {
-          query = query.lte('rented_at', searchParams.date_to);
-        }
-
-        // Apply sorting
-        if (searchParams.sort_by) {
-          query = query.order(searchParams.sort_by, { 
-            ascending: searchParams.sort_order === 'asc' 
-          });
-        } else {
-          query = query.order('rented_at', { ascending: false });
-        }
-
-        // Apply pagination
-        const page = searchParams.page || 1;
-        const limit = searchParams.limit || 20;
-        const offset = (page - 1) * limit;
-        
-        query = query.range(offset, offset + limit - 1);
-
-        const result = await query;
-        return result;
+        return await adapter.listRentals(filters);
       },
       'api',
-      { 
+      {
         filters: searchParams,
         requestId: context.requestId,
-        page: searchParams.page || 1,
-        limit: searchParams.limit || 20
+        page: filters.page,
+        limit: filters.limit
       }
     );
-
-    const { data: rentals, error, count } = queryResult;
-
-    if (error) {
-      throw handleSupabaseError(error);
-    }
 
     const duration = Date.now() - startTime;
     apiLogger.apiResponse('GET', '/api/rentals', 200, duration);
 
-    return createSuccessResponse(rentals, {
-      pagination: {
-        page: searchParams.page || 1,
-        limit: searchParams.limit || 20,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / (searchParams.limit || 20)),
-      },
+    return createSuccessResponse(result.data, {
+      pagination: result.pagination,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
     const duration = Date.now() - startTime;
     apiLogger.apiResponse('GET', '/api/rentals', 500, duration);
-    apiLogger.error('Rentals list API error', error as Error, { 
+    apiLogger.error('Rentals list API error', error as Error, {
       requestId: context.requestId,
-      searchParams: request.url 
+      searchParams: request.url
     });
     return handleAPIError(error);
   }
@@ -129,107 +83,42 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   const context = extractRequestContext(request, 'admin'); // In real app, get from auth
-  
+
   try {
     apiLogger.apiRequest('POST', '/api/rentals', { requestId: context.requestId });
-    
-    const supabase = createClient();
-    
-    if (!await checkAdmin(supabase)) {
-      auditLogger.logAccessDenied('admin', 'rental', 'create', {
-        ipAddress: context.ipAddress,
-        requestId: context.requestId,
-      });
-      throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
-    }
+
+    // TODO: Implement Cloudflare Access authentication in Phase 4 (TASK-migration-010)
+    // const isAdmin = await checkCloudflareAccessAdmin(request);
+    // if (!isAdmin) {
+    //   auditLogger.logAccessDenied('admin', 'rental', 'create', {
+    //     ipAddress: context.ipAddress,
+    //     requestId: context.requestId,
+    //   });
+    //   throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
+    // }
+
+    const adapter = getD1Adapter();
 
     // Validate request body with schema
     const validatedData = await validateRequestBody(request, rentalCreateSchema);
 
-    // Check if game is already rented with performance monitoring
-    const existingRentalResult = await performanceMonitor.measureAsync(
-      'rental_availability_check',
-      async () => {
-        const result = await supabase
-          .from("rentals")
-          .select("id")
-          .eq("game_id", validatedData.game_id)
-          .is("returned_at", null)
-          .single();
-        return result;
-      },
-      'api',
-      { 
-        gameId: validatedData.game_id,
-        requestId: context.requestId 
-      }
-    );
-
-    const { data: existingRental, error: existingRentalError } = existingRentalResult;
-
-    if (existingRentalError && existingRentalError.code !== 'PGRST116') {
-      throw handleSupabaseError(existingRentalError);
-    }
-
-    if (existingRental) {
-      apiLogger.warn('Rental creation failed - game already rented', {
-        gameId: validatedData.game_id,
-        requestId: context.requestId,
-      });
-      throw new AppError(
-        ErrorCode.GAME_ALREADY_RENTED,
-        "Game is already rented",
-        "이 게임은 이미 대여 중입니다.",
-        409,
-        { context: { game_id: validatedData.game_id } }
-      );
-    }
-
-    // Calculate due date (14 days from rental date) if not provided
-    let dueDate = validatedData.due_date;
-    if (!dueDate) {
-      const rentalDate = new Date(validatedData.rented_at);
-      rentalDate.setDate(rentalDate.getDate() + 14);
-      dueDate = rentalDate.toISOString().split("T")[0];
-    }
-
-    // Create rental with performance monitoring
-    const insertResult = await performanceMonitor.measureAsync(
+    // Create rental with performance monitoring (availability check is done in adapter)
+    const newRental = await performanceMonitor.measureAsync(
       'rental_create_query',
       async () => {
-        const result = await supabase
-          .from("rentals")
-          .insert({
-            name: validatedData.name,
-            email: validatedData.email,
-            phone: validatedData.phone,
-            rented_at: validatedData.rented_at,
-            due_date: dueDate,
-            game_id: validatedData.game_id,
-            notes: validatedData.notes,
-          })
-          .select("*, games (*)");
-        return result;
+        return await adapter.createRental(validatedData);
       },
       'api',
-      { 
+      {
         renterName: validatedData.name,
         gameId: validatedData.game_id,
-        requestId: context.requestId 
+        requestId: context.requestId
       }
     );
-
-    const { data, error } = insertResult;
-
-    if (error) {
-      throw handleSupabaseError(error);
-    }
-
-    const newRental = Array.isArray(data) ? data[0] : data;
 
     // Log successful rental creation
     dataEventLogger.rentalCreated(
-      'admin', // In a real app, you'd get this from the authenticated user
+      'admin', // TODO: Get from Cloudflare Access headers in Phase 4
       newRental.id,
       newRental.games?.title || 'Unknown Game',
       newRental.name,
@@ -239,15 +128,15 @@ export async function POST(request: NextRequest) {
 
     const duration = Date.now() - startTime;
     apiLogger.apiResponse('POST', '/api/rentals', 201, duration);
-    apiLogger.info('Rental created successfully', { 
-      rentalId: newRental.id, 
+    apiLogger.info('Rental created successfully', {
+      rentalId: newRental.id,
       gameTitle: newRental.games?.title,
       renterName: newRental.name,
       duration,
       requestId: context.requestId
     });
 
-    return createSuccessResponse(data, { timestamp: new Date().toISOString() });
+    return createSuccessResponse(newRental, { timestamp: new Date().toISOString() });
   } catch (error) {
     const duration = Date.now() - startTime;
     apiLogger.apiResponse('POST', '/api/rentals', 500, duration);

@@ -1,65 +1,50 @@
-import { createClient } from "@/utils/supabase/server";
 import { NextResponse, NextRequest } from "next/server";
 import { checkAdmin } from "@/utils/auth";
 import { handleAPIError, createSuccessResponse } from "@/lib/api-error-handler";
-import { handleSupabaseError, createAuthError, createNotFoundError, createValidationError, ErrorCode } from "@/lib/errors";
+import { createAuthError, createNotFoundError, createValidationError, ErrorCode } from "@/lib/errors";
+import { getD1Adapter } from "@/utils/d1/server";
+import { z } from "zod";
+import { validateRouteParams } from "@/lib/validation/middleware";
+
+const rentalIdSchema = z.object({
+  id: z.string().regex(/^\d+$/, "Rental ID must be a number").transform(Number),
+});
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    
-    if (!id || isNaN(Number(id))) {
-      throw createValidationError("Invalid rental ID", "id", id);
+    const resolvedParams = await params;
+    const { id } = validateRouteParams(resolvedParams, rentalIdSchema);
+
+    // TODO: Implement Cloudflare Access authentication in Phase 4 (TASK-migration-010)
+    // const isAdmin = await checkCloudflareAccessAdmin(request);
+    // if (!isAdmin) {
+    //   throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
+    // }
+
+    const adapter = getD1Adapter();
+
+    // Get current rental to calculate new due date
+    const currentRental = await adapter.getRental(id);
+    if (!currentRental) {
+      throw createNotFoundError("Rental", id.toString());
     }
 
-    const supabase = createClient();
-    
-    if (!(await checkAdmin(supabase))) {
-      throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
-    }
-
-    // Get current rental information
-    const { data: rental, error: rentalError } = await supabase
-      .from("rentals")
-      .select("due_date, returned_at")
-      .eq("id", id)
-      .single();
-
-    if (rentalError) {
-      if (rentalError.code === 'PGRST116') {
-        throw createNotFoundError("Rental", id);
-      }
-      throw handleSupabaseError(rentalError);
-    }
-
-    // Check if rental is already returned
-    if (rental.returned_at) {
+    if (currentRental.returned_at) {
       throw createValidationError("Cannot extend a returned rental", "rental_status");
     }
 
     // Extend due date by 14 days
-    const newDueDate = new Date(rental.due_date);
+    const newDueDate = new Date(currentRental.due_date);
     newDueDate.setDate(newDueDate.getDate() + 14);
+    const formattedDueDate = newDueDate.toISOString().split("T")[0];
 
-    const { data, error } = await supabase
-      .from("rentals")
-      .update({ 
-        due_date: newDueDate.toISOString().split("T")[0],
-        extended_count: supabase.sql`extended_count + 1`
-      })
-      .eq("id", id)
-      .select();
+    const extendedRental = await adapter.extendRental(id, formattedDueDate);
 
-    if (error) {
-      throw handleSupabaseError(error);
-    }
-
-    return createSuccessResponse(data, { 
+    return createSuccessResponse(extendedRental, {
       timestamp: new Date().toISOString(),
-      message: "Rental extended successfully"
     });
   } catch (error) {
     return handleAPIError(error);

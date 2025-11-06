@@ -136,7 +136,9 @@ export const ToastContainer: React.FC = () => {
 
   useEffect(() => {
     const unsubscribe = notificationManager.subscribe(setNotifications);
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const handleClose = (id: string) => {

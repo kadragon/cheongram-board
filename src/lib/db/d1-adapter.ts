@@ -697,13 +697,24 @@ export class D1Adapter {
 
   /**
    * Delete a rental
+   * Checks for existence before deletion
+   * @returns true if rental was deleted, false if rental not found
+   * @throws Error if deletion fails
    */
-  async deleteRental(id: number): Promise<void> {
+  async deleteRental(id: number): Promise<boolean> {
+    // Check if rental exists
+    const existingRental = await this.getRental(id);
+    if (!existingRental) {
+      return false;
+    }
+
     const sql = 'DELETE FROM rentals WHERE id = ?';
     const result = await this.db.prepare(sql).bind(id).run();
 
     if (!result.success) {
       throw new Error('Failed to delete rental');
     }
+
+    return true;
   }
 }

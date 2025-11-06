@@ -37,9 +37,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return createSuccessResponse(gameData, { 
-      timestamp: new Date().toISOString(),
-      message: "Game data scraped successfully"
+    return createSuccessResponse(gameData, {
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     // Handle scraping-specific errors

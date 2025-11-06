@@ -1,43 +1,38 @@
-import { createClient } from "@/utils/supabase/server";
 import { NextResponse, NextRequest } from "next/server";
 import { checkAdmin } from "@/utils/auth";
 import { handleAPIError, createSuccessResponse } from "@/lib/api-error-handler";
-import { handleSupabaseError, createAuthError, createNotFoundError, createValidationError, ErrorCode } from "@/lib/errors";
+import { createAuthError, createNotFoundError, createValidationError, ErrorCode } from "@/lib/errors";
+import { getD1Adapter } from "@/utils/d1/server";
+import { z } from "zod";
+import { validateRouteParams, validateRequestBody } from "@/lib/validation/middleware";
+import { rentalUpdateSchema } from "@/lib/validation/schemas";
+
+const rentalIdSchema = z.object({
+  id: z.string().regex(/^\d+$/, "Rental ID must be a number").transform(Number),
+});
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params;
-    
-    if (!id || isNaN(Number(id))) {
-      throw createValidationError("Invalid rental ID", "id", id);
+    const params = await context.params;
+    const { id } = validateRouteParams(params, rentalIdSchema);
+
+    // TODO: Implement Cloudflare Access authentication in Phase 4 (TASK-migration-010)
+    // const isAdmin = await checkCloudflareAccessAdmin(request);
+    // if (!isAdmin) {
+    //   throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
+    // }
+
+    const adapter = getD1Adapter();
+    const rental = await adapter.getRental(id);
+
+    if (!rental) {
+      throw createNotFoundError("Rental", id.toString());
     }
 
-    const supabase = createClient();
-    
-    if (!await checkAdmin(supabase)) {
-      throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
-    }
-
-    const { data, error } = await supabase
-      .from("rentals")
-      .select(`
-        *,
-        games (*)
-      `)
-      .eq("id", id)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        throw createNotFoundError("Rental", id);
-      }
-      throw handleSupabaseError(error);
-    }
-
-    return createSuccessResponse(data);
+    return createSuccessResponse(rental);
   } catch (error) {
     return handleAPIError(error);
   }
@@ -48,39 +43,27 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params;
-    
-    if (!id || isNaN(Number(id))) {
-      throw createValidationError("Invalid rental ID", "id", id);
+    const params = await context.params;
+    const { id } = validateRouteParams(params, rentalIdSchema);
+
+    // TODO: Implement Cloudflare Access authentication in Phase 4 (TASK-migration-010)
+    // const isAdmin = await checkCloudflareAccessAdmin(request);
+    // if (!isAdmin) {
+    //   throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
+    // }
+
+    const adapter = getD1Adapter();
+
+    // Validate request body with schema
+    const validatedData = await validateRequestBody(request, rentalUpdateSchema);
+
+    const updatedRental = await adapter.updateRental(id, validatedData);
+
+    if (!updatedRental) {
+      throw createNotFoundError("Rental", id.toString());
     }
 
-    const supabase = createClient();
-    
-    if (!await checkAdmin(supabase)) {
-      throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
-    }
-
-    const body = await request.json();
-    
-    // Validate required fields if they are being updated
-    if (body.name !== undefined && !body.name) {
-      throw createValidationError("Renter name cannot be empty", "name");
-    }
-
-    const { data, error } = await supabase
-      .from("rentals")
-      .update(body)
-      .eq("id", id)
-      .select();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        throw createNotFoundError("Rental", id);
-      }
-      throw handleSupabaseError(error);
-    }
-
-    return createSuccessResponse(data);
+    return createSuccessResponse(updatedRental);
   } catch (error) {
     return handleAPIError(error);
   }
@@ -91,36 +74,21 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params;
-    
-    if (!id || isNaN(Number(id))) {
-      throw createValidationError("Invalid rental ID", "id", id);
-    }
+    const params = await context.params;
+    const { id } = validateRouteParams(params, rentalIdSchema);
 
-    const supabase = createClient();
-    
-    if (!await checkAdmin(supabase)) {
-      throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
-    }
+    // TODO: Implement Cloudflare Access authentication in Phase 4 (TASK-migration-010)
+    // const isAdmin = await checkCloudflareAccessAdmin(request);
+    // if (!isAdmin) {
+    //   throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
+    // }
 
-    // Check if rental exists first
-    const { data: existingRental, error: checkError } = await supabase
-      .from("rentals")
-      .select("id")
-      .eq("id", id)
-      .single();
+    const adapter = getD1Adapter();
 
-    if (checkError) {
-      if (checkError.code === 'PGRST116') {
-        throw createNotFoundError("Rental", id);
-      }
-      throw handleSupabaseError(checkError);
-    }
+    const deleted = await adapter.deleteRental(id);
 
-    const { error } = await supabase.from("rentals").delete().eq("id", id);
-
-    if (error) {
-      throw handleSupabaseError(error);
+    if (!deleted) {
+      throw createNotFoundError("Rental", id.toString());
     }
 
     return new Response(null, { status: 204 });

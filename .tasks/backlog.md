@@ -1,5 +1,11 @@
 # Backlog
 
+- Trace: SPEC-devtool-pre-commit-1, TEST-devtool-pre-commit-typecheck
+  Unclear Field: TypeScript baseline fails for existing Supabase routes and UI hooks
+  Proposed Clarification: Summarise and resolve legacy type errors blocking `npm run typecheck` (e.g., Supabase client `.sql` usage, response payload typing, toast cleanup return type, audit logger visibility, Zod schema helpers).
+  Owner: devex-team
+  Status: open
+
 - Trace: SPEC-TBD, TEST-TBD
   Unclear Field: performanceMonitor.measureAsync database 호출 구조
   Proposed Clarification: Supabase 쿼리가 실제 실행되도록 measureAsync 내부/외부 어디에서 `await` 수행할지 결정 필요
