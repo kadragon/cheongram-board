@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       async () => {
         let query = supabase
           .from("games")
-          .select("*, rentals(returned_at, due_date)");
+          .select("*, rentals(returned_at, due_date)", { count: 'exact' });
 
         // Apply search filters
         if (searchParams.query) {
@@ -69,10 +69,11 @@ export async function GET(request: NextRequest) {
         
         query = query.range(offset, offset + limit - 1);
 
-        return query;
+        const result = await query;
+        return result;
       },
       'api',
-      { 
+      {
         filters: searchParams,
         page: searchParams.page || 1,
         limit: searchParams.limit || 20
@@ -144,11 +145,12 @@ export async function POST(request: NextRequest) {
     const insertResult = await performanceMonitor.measureAsync(
       'game_create_query',
       async () => {
-        return supabase
+        const result = await supabase
           .from("games")
           .insert(validatedData)
           .select()
           .single();
+        return result;
       },
       'api',
       { gameTitle: validatedData.title }

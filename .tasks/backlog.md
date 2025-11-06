@@ -4,7 +4,7 @@
   Unclear Field: performanceMonitor.measureAsync database 호출 구조
   Proposed Clarification: Supabase 쿼리가 실제 실행되도록 measureAsync 내부/외부 어디에서 `await` 수행할지 결정 필요
   Owner: TBD
-  Status: open
+  Status: in-progress
 
 - Trace: SPEC-TBD, TEST-TBD
   Unclear Field: 감사/로깅 헬퍼 사용자 식별자 전달 방식

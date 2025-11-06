@@ -92,10 +92,31 @@ class Logger {
     return Date.now().toString(36) + Math.random().toString(36).substring(2);
   }
 
+  private safeStringify(value: unknown): string {
+    const seen = new WeakSet<object>();
+
+    try {
+      return JSON.stringify(value, (key, val) => {
+        if (typeof val === 'object' && val !== null) {
+          if (seen.has(val as object)) {
+            return '[Circular]';
+          }
+          seen.add(val as object);
+        }
+        if (typeof val === 'bigint') {
+          return val.toString();
+        }
+        return val;
+      });
+    } catch (error) {
+      return '[Unserializable metadata]';
+    }
+  }
+
   private formatConsoleMessage(entry: LogEntry): string {
     const levelName = LogLevel[entry.level];
     const context = entry.context ? `[${entry.context}] ` : '';
-    const metadata = entry.metadata ? ` ${JSON.stringify(entry.metadata)}` : '';
+    const metadata = entry.metadata ? ` ${this.safeStringify(entry.metadata)}` : '';
     
     return `${entry.timestamp} ${levelName} ${context}${entry.message}${metadata}`;
   }

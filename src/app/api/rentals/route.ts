@@ -34,10 +34,9 @@ export async function GET(request: NextRequest) {
     const queryResult = await performanceMonitor.measureAsync(
       'rentals_list_query',
       async () => {
-        let query = supabase.from("rentals").select(`
-          *,
-          games (*)
-        `);
+        let query = supabase
+          .from("rentals")
+          .select("*, games (*)", { count: "exact" });
 
         // Apply search filters
         if (searchParams.query) {
@@ -86,7 +85,8 @@ export async function GET(request: NextRequest) {
         
         query = query.range(offset, offset + limit - 1);
 
-        return query;
+        const result = await query;
+        return result;
       },
       'api',
       { 
@@ -150,12 +150,13 @@ export async function POST(request: NextRequest) {
     const existingRentalResult = await performanceMonitor.measureAsync(
       'rental_availability_check',
       async () => {
-        return supabase
+        const result = await supabase
           .from("rentals")
           .select("id")
           .eq("game_id", validatedData.game_id)
           .is("returned_at", null)
           .single();
+        return result;
       },
       'api',
       { 
@@ -196,7 +197,7 @@ export async function POST(request: NextRequest) {
     const insertResult = await performanceMonitor.measureAsync(
       'rental_create_query',
       async () => {
-        return supabase
+        const result = await supabase
           .from("rentals")
           .insert({
             name: validatedData.name,
@@ -207,10 +208,8 @@ export async function POST(request: NextRequest) {
             game_id: validatedData.game_id,
             notes: validatedData.notes,
           })
-          .select(`
-            *,
-            games (*)
-          `);
+          .select("*, games (*)");
+        return result;
       },
       'api',
       { 
