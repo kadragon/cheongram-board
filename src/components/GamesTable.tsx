@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/utils/supabase/client";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -14,16 +13,20 @@ import { GameForm } from "./GameForm";
 import { Checkbox } from "./ui/checkbox";
 
 export function GamesTable() {
-  const supabase = createClient();
   const [games, setGames] = useState<any[]>([]);
   const [selectedGame, setSelectedGame] = useState<any | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedGames, setSelectedGames] = useState<number[]>([]);
 
   async function fetchGames() {
-    const { data } = await supabase.from("games").select("*");
-    if (data) {
-      setGames(data);
+    try {
+      const response = await fetch("/api/games");
+      if (response.ok) {
+        const result = await response.json();
+        setGames(result.data || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch games:", error);
     }
   }
 
@@ -37,14 +40,40 @@ export function GamesTable() {
   };
 
   const handleDelete = async (id: number) => {
-    await supabase.from("games").delete().eq("id", id);
-    fetchGames();
+    try {
+      const response = await fetch(`/api/games/${id}`, {
+        method: "DELETE",
+      });
+      if (response.ok || response.status === 204) {
+        fetchGames();
+      } else {
+        const error = await response.json();
+        alert(`Failed to delete game: ${error.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error("Failed to delete game:", error);
+      alert("Failed to delete game");
+    }
   };
 
   const handleBulkDelete = async () => {
-    await supabase.from("games").delete().in("id", selectedGames);
-    setSelectedGames([]);
-    fetchGames();
+    if (!confirm(`Are you sure you want to delete ${selectedGames.length} games?`)) {
+      return;
+    }
+
+    try {
+      // Delete games sequentially
+      for (const id of selectedGames) {
+        await fetch(`/api/games/${id}`, {
+          method: "DELETE",
+        });
+      }
+      setSelectedGames([]);
+      fetchGames();
+    } catch (error) {
+      console.error("Failed to delete games:", error);
+      alert("Failed to delete some games");
+    }
   };
 
   const handleSelectGame = (id: number) => {
@@ -57,8 +86,16 @@ export function GamesTable() {
 
   const handleExport = () => {
     const csvContent = "data:text/csv;charset=utf-8,"
-      + ["ID", "Title", "Min Players", "Max Players", "Play Time", "URL"].join(",") + "\n"
-      + games.map(e => [e.id, e.title, e.min_players, e.max_players, e.play_time, e.koreaboardgames_url].join(",")).join("\n");
+      + ["ID", "Title", "Min Players", "Max Players", "Play Time", "Complexity", "Description"].join(",") + "\n"
+      + games.map(e => [
+          e.id,
+          `"${e.title}"`,
+          e.min_players,
+          e.max_players,
+          e.play_time,
+          e.complexity,
+          `"${e.description || ''}"`
+        ].join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -67,7 +104,7 @@ export function GamesTable() {
     link.click();
     document.body.removeChild(link);
   };
-  
+
   return (
     <div>
       <div className="flex justify-end mb-4">
@@ -108,7 +145,7 @@ export function GamesTable() {
             <th className="py-2 px-4 border-b">Title</th>
             <th className="py-2 px-4 border-b text-center">Players</th>
             <th className="py-2 px-4 border-b text-center">Play Time (min)</th>
-            <th className="py-2 px-4 border-b text-center">URL</th>
+            <th className="py-2 px-4 border-b text-center">Complexity</th>
             <th className="py-2 px-4 border-b text-center">Actions</th>
           </tr>
         </thead>
@@ -124,11 +161,7 @@ export function GamesTable() {
               <td className="py-2 px-4 border-b">{game.title}</td>
               <td className="py-2 px-4 border-b text-center">{game.min_players}-{game.max_players}</td>
               <td className="py-2 px-4 border-b text-center">{game.play_time}</td>
-              <td className="py-2 px-4 border-b text-center">
-                <a href={game.koreaboardgames_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                  Link
-                </a>
-              </td>
+              <td className="py-2 px-4 border-b text-center">{game.complexity || '-'}</td>
               <td className="py-2 px-4 border-b text-center">
                 <Dialog open={isDialogOpen && selectedGame?.id === game.id} onOpenChange={(open) => {
                   if (!open) {

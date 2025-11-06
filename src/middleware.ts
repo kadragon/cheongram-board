@@ -32,7 +32,7 @@ export async function middleware(request: NextRequest) {
       // If the user is not authenticated, redirect to unauthorized page
       if (!userEmail) {
         auditLogger.logAccessDenied(
-          undefined,
+          'unknown',
           'admin_route',
           'access',
           {

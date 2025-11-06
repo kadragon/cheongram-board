@@ -4,7 +4,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { AppError, ErrorCode, isAppError, handleSupabaseError } from './errors';
+import { AppError, ErrorCode, isAppError, handleDatabaseError } from './errors';
 
 export interface APIErrorResponse {
   error: {
@@ -41,8 +41,8 @@ export const handleAPIError = (error: unknown): NextResponse<APIErrorResponse> =
     appError = error;
   } else if (error instanceof Error) {
     // Handle different types of errors
-    if (error.message.includes('supabase') || error.message.includes('database')) {
-      appError = handleSupabaseError(error);
+    if (error.message.includes('database') || error.message.includes('D1') || error.message.includes('SQL')) {
+      appError = handleDatabaseError(error);
     } else {
       appError = new AppError(
         ErrorCode.INTERNAL_ERROR,

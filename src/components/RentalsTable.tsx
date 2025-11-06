@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/utils/supabase/client";
 import { Button } from "./ui/button";
 import { RentalForm } from "./RentalForm";
 import {
@@ -13,15 +12,19 @@ import {
 } from "./ui/dialog";
 
 export function RentalsTable() {
-  const supabase = createClient();
   const [rentals, setRentals] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function fetchRentals() {
-    const { data } = await supabase.from("rentals").select("*, games(title)");
-    if (data) {
-      setRentals(data);
+    try {
+      const response = await fetch("/api/rentals");
+      if (response.ok) {
+        const result = await response.json();
+        setRentals(result.data || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch rentals:", error);
     }
   }
 
@@ -30,25 +33,57 @@ export function RentalsTable() {
   }, []);
 
   const handleExtend = async (id: number) => {
-    await supabase.rpc('extend_rental', { rental_id: id });
-    fetchRentals();
+    try {
+      const response = await fetch(`/api/rentals/${id}/extend`, {
+        method: "POST",
+      });
+      if (response.ok) {
+        fetchRentals();
+      } else {
+        const error = await response.json();
+        alert(`Failed to extend rental: ${error.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error("Failed to extend rental:", error);
+      alert("Failed to extend rental");
+    }
   };
 
   const handleReturn = async (id: number) => {
-    await supabase.from("rentals").update({ returned_at: new Date().toISOString() }).eq("id", id);
-    fetchRentals();
+    try {
+      const response = await fetch(`/api/rentals/${id}/return`, {
+        method: "POST",
+      });
+      if (response.ok) {
+        fetchRentals();
+      } else {
+        const error = await response.json();
+        alert(`Failed to return rental: ${error.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error("Failed to return rental:", error);
+      alert("Failed to return rental");
+    }
   };
 
   const handleExport = () => {
     const csvContent = "data:text/csv;charset=utf-8,"
-      + ["ID", "Game", "Rented At", "Due Date", "Returned At"].join(",") + "\n"
-      + rentals.map(e => [e.id, e.games.title, e.rented_at, e.due_date, e.returned_at].join(",")).join("\n");
+      + ["ID", "Game", "Renter", "Rented At", "Due Date", "Returned At"].join(",") + "\n"
+      + rentals.map(e => [
+          e.id,
+          `"${e.games?.title || 'Unknown'}"`,
+          `"${e.name}"`,
+          e.rented_at,
+          e.due_date,
+          e.returned_at || ''
+        ].join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", "rentals.csv");
     document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
 
   const handleSubmit = async (formData: any) => {
@@ -61,9 +96,10 @@ export function RentalsTable() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        renter_name,
-        rental_date,
+        name: renter_name,
         game_id: parseInt(game_id),
+        rented_at: rental_date,
+        due_date: new Date(new Date(rental_date).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       }),
     });
 
@@ -71,8 +107,8 @@ export function RentalsTable() {
       fetchRentals();
       setIsDialogOpen(false);
     } else {
-      const { error } = await response.json();
-      alert(`Error: ${error}`);
+      const result = await response.json();
+      alert(`Error: ${result.error || 'Unknown error'}`);
     }
     setIsSubmitting(false);
   };
@@ -108,7 +144,7 @@ export function RentalsTable() {
         <tbody>
           {rentals.map((rental) => (
             <tr key={rental.id}>
-              <td className="py-2 px-4 border-b">{rental.games.title}</td>
+              <td className="py-2 px-4 border-b">{rental.games?.title || 'Unknown'}</td>
               <td className="py-2 px-4 border-b text-center">{rental.name}</td>
               <td className="py-2 px-4 border-b text-center">{new Date(rental.rented_at).toLocaleDateString()}</td>
               <td className="py-2 px-4 border-b text-center">{new Date(rental.due_date).toLocaleDateString()}</td>

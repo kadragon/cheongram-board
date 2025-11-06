@@ -159,17 +159,20 @@ export const isAppError = (error: any): error is AppError => {
   return error instanceof AppError;
 };
 
-export const handleSupabaseError = (error: any): AppError => {
+export const handleDatabaseError = (error: any): AppError => {
   if (isAppError(error)) {
     return error;
   }
 
-  // Handle common Supabase error patterns
+  // Handle common database error patterns
+  // PGRST116: Record not found (PostgreSQL/PostgREST)
   if (error?.code === 'PGRST116') {
     return createNotFoundError('Record');
   }
-  
-  if (error?.code === '23505') {
+
+  // 23505: Duplicate key violation (SQL standard)
+  // SQLITE_CONSTRAINT: SQLite unique constraint violation
+  if (error?.code === '23505' || error?.code === 'SQLITE_CONSTRAINT') {
     return new AppError(
       ErrorCode.DUPLICATE_RECORD,
       'Duplicate record',
@@ -183,6 +186,11 @@ export const handleSupabaseError = (error: any): AppError => {
     error
   );
 };
+
+/**
+ * @deprecated Use handleDatabaseError instead
+ */
+export const handleSupabaseError = handleDatabaseError;
 
 export const handleNetworkError = (error: any): AppError => {
   if (isAppError(error)) {
