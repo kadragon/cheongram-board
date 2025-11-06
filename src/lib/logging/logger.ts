@@ -148,7 +148,7 @@ class Logger {
 
   private addToBuffer(entry: LogEntry): void {
     this.logBuffer.push(entry);
-    
+
     if (this.logBuffer.length > this.maxBufferSize) {
       this.logBuffer.shift(); // Remove oldest entry
     }
@@ -272,7 +272,17 @@ class Logger {
 
   // Get recent logs (useful for debugging)
   getRecentLogs(count: number = 50): LogEntry[] {
-    return this.logBuffer.slice(-count);
+    if (count <= 0) {
+      this.logBuffer.length = 0;
+      return [];
+    }
+
+    const recentLogs = this.logBuffer.slice(-count);
+    return recentLogs.reverse();
+  }
+
+  clearLogs(): void {
+    this.logBuffer.length = 0;
   }
 
   // Flush buffered logs to remote endpoint
@@ -280,7 +290,7 @@ class Logger {
     if (this.logBuffer.length === 0) return;
 
     const logsToSend = [...this.logBuffer];
-    this.logBuffer = [];
+    this.logBuffer.length = 0;
 
     await this.sendToRemote(logsToSend);
   }
@@ -293,7 +303,11 @@ class Logger {
     };
 
     const childLogger = new Logger(childConfig);
-    
+
+    // Share the underlying log buffer so child logs are visible to the parent
+    childLogger.logBuffer = this.logBuffer;
+    childLogger.maxBufferSize = this.maxBufferSize;
+
     // If metadata is provided, add it to all log entries
     if (metadata) {
       const originalCreateLogEntry = childLogger.createLogEntry.bind(childLogger);
@@ -308,7 +322,7 @@ class Logger {
 
 // Create default logger instances
 export const logger = new Logger({
-  level: process.env.NODE_ENV === 'development' ? LogLevel.DEBUG : LogLevel.INFO,
+  level: process.env.NODE_ENV !== 'production' ? LogLevel.DEBUG : LogLevel.INFO,
   enableConsole: true,
   enableRemote: process.env.NODE_ENV === 'production',
   remoteEndpoint: process.env.LOGGING_ENDPOINT,

@@ -147,6 +147,10 @@ class AuditLogger {
     }
   }
 
+  clearEvents(): void {
+    this.events.length = 0;
+  }
+
   private async sendCriticalAlert(event: AuditEvent): Promise<void> {
     // Implementation would depend on your alerting system
     // This could be Slack, email, PagerDuty, etc.

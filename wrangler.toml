@@ -6,6 +6,10 @@ routes = [
   { pattern = "crb.kadragon.work", custom_domain = true }
 ]
 
+[vars]
+NODE_ENV = "development"
+ADMIN_EMAILS = "kangdongouk@gmail.com"
+
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"

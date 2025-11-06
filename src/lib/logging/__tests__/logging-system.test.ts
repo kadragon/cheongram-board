@@ -16,29 +16,45 @@ import {
 } from '../integration';
 
 // Mock Next.js request for testing
-const createMockRequest = (overrides: any = {}) => ({
-  method: 'GET',
-  nextUrl: { pathname: '/test' },
-  headers: {
-    get: (name: string) => {
-      const headers: Record<string, string> = {
-        'user-agent': 'test-agent',
-        'x-forwarded-for': '127.0.0.1',
-        ...overrides.headers
+const createMockRequest = (overrides: any = {}) => {
+  const { headers = {}, cookies = {}, ...rest } = overrides;
+
+  const headerStore = typeof headers.get === 'function'
+    ? headers
+    : {
+        get: (name: string) => {
+          const normalizedHeaders: Record<string, string> = {
+            'user-agent': 'test-agent',
+            'x-forwarded-for': '127.0.0.1',
+            ...headers,
+          };
+          return normalizedHeaders[name] || null;
+        },
       };
-      return headers[name] || null;
-    }
-  },
-  cookies: {
-    get: (name: string) => overrides.cookies?.[name] || null
-  },
-  ...overrides
-});
+
+  const cookieStore = typeof cookies.get === 'function'
+    ? cookies
+    : {
+        get: (name: string) => {
+          const value = (cookies as Record<string, string | undefined>)[name];
+          return value ? { value } : null;
+        },
+      };
+
+  return {
+    method: 'GET',
+    nextUrl: { pathname: '/test' },
+    headers: headerStore,
+    cookies: cookieStore,
+    ...rest,
+  };
+};
 
 describe('Logging System', () => {
   beforeEach(() => {
-    // Clear any existing logs
-    logger.getRecentLogs(0);
+    logger.clearLogs();
+    auditLogger.clearEvents();
+    performanceMonitor.clearMetrics();
   });
 
   describe('Basic Logger', () => {

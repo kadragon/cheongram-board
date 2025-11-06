@@ -31,7 +31,9 @@ class HealthMonitor {
 
   constructor() {
     this.registerDefaultChecks();
-    this.startHealthChecking();
+    if (process.env.NODE_ENV !== 'test' && loggingConfig.environment !== 'test') {
+      this.startHealthChecking();
+    }
   }
 
   // Register a health check

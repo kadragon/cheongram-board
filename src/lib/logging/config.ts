@@ -72,7 +72,7 @@ export interface LoggingConfig {
 // Default configuration
 const defaultConfig: LoggingConfig = {
   enabled: true,
-  level: process.env.NODE_ENV === 'development' ? LogLevel.DEBUG : LogLevel.INFO,
+  level: process.env.NODE_ENV !== 'production' ? LogLevel.DEBUG : LogLevel.INFO,
   environment: (process.env.NODE_ENV as any) || 'development',
   
   console: {

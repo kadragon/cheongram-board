@@ -477,7 +477,7 @@ export const systemHealthLogger = {
 // Cleanup and maintenance
 export const maintenanceLogger = {
   scheduleLogCleanup: () => {
-    if (typeof setInterval !== 'undefined') {
+    if (typeof setInterval !== 'undefined' && loggingConfig.environment !== 'test') {
       // Clean up old audit logs every hour
       setInterval(() => {
         const cutoffDate = new Date();
@@ -505,7 +505,7 @@ export const maintenanceLogger = {
 };
 
 // Initialize maintenance tasks
-if (typeof window === 'undefined' && loggingConfig.enabled) {
+if (typeof window === 'undefined' && loggingConfig.enabled && loggingConfig.environment !== 'test') {
   maintenanceLogger.scheduleLogCleanup();
 }
 
