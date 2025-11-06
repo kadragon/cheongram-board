@@ -1,17 +1,22 @@
-import { createClient } from '@/utils/supabase/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 import { auditLogger } from '@/lib/logging/audit'
 import { performanceMonitor } from '@/lib/monitoring/performance'
 import { logger } from '@/lib/logging/logger'
+import { getAuthenticatedUserEmail, checkCloudflareAccessAdmin } from '@/utils/auth'
 
+/**
+ * Middleware for Cloudflare Access authentication
+ *
+ * This middleware:
+ * 1. Checks authentication via Cloudflare Access headers
+ * 2. Protects /admin routes by verifying admin status
+ * 3. Logs access attempts and performance metrics
+ */
 export async function middleware(request: NextRequest) {
   const startTime = Date.now()
-  const { supabase, response } = createClient(request)
 
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const userEmail = getAuthenticatedUserEmail(request)
 
     // Log request for monitoring
     const requestMetadata = {
@@ -19,13 +24,13 @@ export async function middleware(request: NextRequest) {
       path: request.nextUrl.pathname,
       userAgent: request.headers.get('user-agent'),
       ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
-      userId: user?.id,
+      userId: userEmail,
     }
 
     // If the user is trying to access an admin route
     if (request.nextUrl.pathname.startsWith('/admin')) {
-      // If the user is not logged in, redirect to the login page
-      if (!user) {
+      // If the user is not authenticated, redirect to unauthorized page
+      if (!userEmail) {
         auditLogger.logAccessDenied(
           undefined,
           'admin_route',
@@ -37,20 +42,19 @@ export async function middleware(request: NextRequest) {
             userAgent: requestMetadata.userAgent,
           }
         )
-        return NextResponse.redirect(new URL('/login', request.url))
+        return NextResponse.json(
+          { error: 'Unauthorized', message: 'Authentication required' },
+          { status: 401 }
+        )
       }
 
       // Check if the user is an admin
-      const { data: userDetails } = await supabase
-        .from('users')
-        .select('is_admin')
-        .eq('id', user.id)
-        .single()
+      const isAdmin = checkCloudflareAccessAdmin(request)
 
-      // If the user is not an admin, redirect to the home page
-      if (!userDetails?.is_admin) {
+      // If the user is not an admin, return forbidden
+      if (!isAdmin) {
         auditLogger.logAccessDenied(
-          user.id,
+          userEmail,
           'admin_route',
           'access',
           {
@@ -60,12 +64,15 @@ export async function middleware(request: NextRequest) {
             userAgent: requestMetadata.userAgent,
           }
         )
-        return NextResponse.redirect(new URL('/', request.url))
+        return NextResponse.json(
+          { error: 'Forbidden', message: 'Admin access required' },
+          { status: 403 }
+        )
       }
 
       // Log successful admin access
       logger.info('Admin route accessed', {
-        userId: user.id,
+        userId: userEmail,
         path: request.nextUrl.pathname,
         ip: requestMetadata.ip,
       })
@@ -81,21 +88,21 @@ export async function middleware(request: NextRequest) {
       context: 'middleware',
       metadata: {
         path: request.nextUrl.pathname,
-        authenticated: !!user,
+        authenticated: !!userEmail,
         isAdmin: request.nextUrl.pathname.startsWith('/admin'),
       },
     })
 
-    return response
+    return NextResponse.next()
   } catch (error) {
     const duration = Date.now() - startTime
     logger.error('Middleware error', error as Error, {
       path: request.nextUrl.pathname,
       duration,
     })
-    
+
     // Continue with the request even if middleware fails
-    return response
+    return NextResponse.next()
   }
 }
 

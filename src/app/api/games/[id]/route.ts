@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { checkAdmin } from "@/utils/auth";
+import { checkCloudflareAccessAdmin } from "@/utils/auth";
 import { handleAPIError, createSuccessResponse } from "@/lib/api-error-handler";
 import { createAuthError, createNotFoundError, AppError, ErrorCode } from "@/lib/errors";
 import { gameUpdateSchema } from "@/lib/validation/schemas";
@@ -40,11 +40,10 @@ export async function PUT(
     const params = await context.params;
     const { id } = validateRouteParams(params, gameIdSchema);
 
-    // TODO: Implement Cloudflare Access authentication in Phase 4 (TASK-migration-010)
-    // const isAdmin = await checkCloudflareAccessAdmin(request);
-    // if (!isAdmin) {
-    //   throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
-    // }
+    const isAdmin = checkCloudflareAccessAdmin(request);
+    if (!isAdmin) {
+      throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
+    }
 
     const adapter = getD1Adapter();
 
@@ -71,11 +70,10 @@ export async function DELETE(
     const params = await context.params;
     const { id } = validateRouteParams(params, gameIdSchema);
 
-    // TODO: Implement Cloudflare Access authentication in Phase 4 (TASK-migration-010)
-    // const isAdmin = await checkCloudflareAccessAdmin(request);
-    // if (!isAdmin) {
-    //   throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
-    // }
+    const isAdmin = checkCloudflareAccessAdmin(request);
+    if (!isAdmin) {
+      throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
+    }
 
     const adapter = getD1Adapter();
 

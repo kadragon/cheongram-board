@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { checkAdmin } from "@/utils/auth";
+import { checkCloudflareAccessAdmin } from "@/utils/auth";
 import { handleAPIError, createSuccessResponse } from "@/lib/api-error-handler";
 import { createAuthError, createNotFoundError, createValidationError, ErrorCode } from "@/lib/errors";
 import { getD1Adapter } from "@/utils/d1/server";
@@ -19,11 +19,10 @@ export async function GET(
     const params = await context.params;
     const { id } = validateRouteParams(params, rentalIdSchema);
 
-    // TODO: Implement Cloudflare Access authentication in Phase 4 (TASK-migration-010)
-    // const isAdmin = await checkCloudflareAccessAdmin(request);
-    // if (!isAdmin) {
-    //   throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
-    // }
+    const isAdmin = checkCloudflareAccessAdmin(request);
+    if (!isAdmin) {
+      throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
+    }
 
     const adapter = getD1Adapter();
     const rental = await adapter.getRental(id);
@@ -46,11 +45,10 @@ export async function PUT(
     const params = await context.params;
     const { id } = validateRouteParams(params, rentalIdSchema);
 
-    // TODO: Implement Cloudflare Access authentication in Phase 4 (TASK-migration-010)
-    // const isAdmin = await checkCloudflareAccessAdmin(request);
-    // if (!isAdmin) {
-    //   throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
-    // }
+    const isAdmin = checkCloudflareAccessAdmin(request);
+    if (!isAdmin) {
+      throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
+    }
 
     const adapter = getD1Adapter();
 
@@ -77,11 +75,10 @@ export async function DELETE(
     const params = await context.params;
     const { id } = validateRouteParams(params, rentalIdSchema);
 
-    // TODO: Implement Cloudflare Access authentication in Phase 4 (TASK-migration-010)
-    // const isAdmin = await checkCloudflareAccessAdmin(request);
-    // if (!isAdmin) {
-    //   throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
-    // }
+    const isAdmin = checkCloudflareAccessAdmin(request);
+    if (!isAdmin) {
+      throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
+    }
 
     const adapter = getD1Adapter();
 

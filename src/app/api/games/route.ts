@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { checkAdmin } from "@/utils/auth";
+import { checkCloudflareAccessAdmin, getAuthenticatedUserEmail } from "@/utils/auth";
 import { handleAPIError, createSuccessResponse } from "@/lib/api-error-handler";
 import { createAuthError, ErrorCode } from "@/lib/errors";
 import { gameCreateSchema, gameSearchSchema } from "@/lib/validation/schemas";
@@ -72,15 +72,16 @@ export async function POST(request: NextRequest) {
   try {
     apiLogger.apiRequest('POST', '/api/games');
 
-    // TODO: Implement Cloudflare Access authentication in Phase 4 (TASK-migration-010)
-    // For now, admin check is temporarily disabled during migration
-    // const isAdmin = await checkCloudflareAccessAdmin(request);
-    // if (!isAdmin) {
-    //   auditLogger.logAccessDenied('unknown', 'game', 'create');
-    //   throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
-    // }
+    // Check admin authentication via Cloudflare Access
+    const isAdmin = checkCloudflareAccessAdmin(request);
+    if (!isAdmin) {
+      const userEmail = getAuthenticatedUserEmail(request);
+      auditLogger.logAccessDenied(userEmail || 'unknown', 'game', 'create');
+      throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
+    }
 
     const adapter = getD1Adapter();
+    const userEmail = getAuthenticatedUserEmail(request)!; // Safe: isAdmin check ensures email exists
 
     // Validate request body with schema
     const validatedData = await validateRequestBody(request, gameCreateSchema);
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
 
     // Log successful game creation
     auditLogger.logGameCreated(
-      'admin', // TODO: Get from Cloudflare Access headers in Phase 4
+      userEmail,
       newGame.id,
       newGame.title,
       validatedData

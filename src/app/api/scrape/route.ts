@@ -1,15 +1,13 @@
-import { createClient } from "@/utils/supabase/server";
 import { NextResponse, NextRequest } from "next/server";
 import { scrapeGame } from "@/utils/scraper";
-import { checkAdmin } from "@/utils/auth";
+import { checkCloudflareAccessAdmin } from "@/utils/auth";
 import { handleAPIError, createSuccessResponse } from "@/lib/api-error-handler";
 import { createAuthError, createValidationError, AppError, ErrorCode } from "@/lib/errors";
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
-    
-    if (!await checkAdmin(supabase)) {
+    const isAdmin = checkCloudflareAccessAdmin(request);
+    if (!isAdmin) {
       throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
     }
 

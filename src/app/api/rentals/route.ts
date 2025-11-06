@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { checkAdmin } from "@/utils/auth";
+import { checkCloudflareAccessAdmin, getAuthenticatedUserEmail } from "@/utils/auth";
 import { handleAPIError, createSuccessResponse } from "@/lib/api-error-handler";
 import { createAuthError, AppError, ErrorCode } from "@/lib/errors";
 import { rentalCreateSchema, rentalSearchSchema } from "@/lib/validation/schemas";
@@ -13,20 +13,20 @@ import type { RentalFilters } from "@/lib/db/types";
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  const context = extractRequestContext(request, 'admin'); // In real app, get from auth
+  const userEmail = getAuthenticatedUserEmail(request) || 'unknown';
+  const context = extractRequestContext(request, userEmail);
 
   try {
     apiLogger.apiRequest('GET', '/api/rentals', { requestId: context.requestId });
 
-    // TODO: Implement Cloudflare Access authentication in Phase 4 (TASK-migration-010)
-    // const isAdmin = await checkCloudflareAccessAdmin(request);
-    // if (!isAdmin) {
-    //   auditLogger.logAccessDenied('admin', 'rentals', 'list', {
-    //     ipAddress: context.ipAddress,
-    //     requestId: context.requestId,
-    //   });
-    //   throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
-    // }
+    const isAdmin = checkCloudflareAccessAdmin(request);
+    if (!isAdmin) {
+      auditLogger.logAccessDenied(userEmail, 'rentals', 'list', {
+        ipAddress: context.ipAddress,
+        requestId: context.requestId,
+      });
+      throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
+    }
 
     const adapter = getD1Adapter();
 
@@ -82,20 +82,20 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  const context = extractRequestContext(request, 'admin'); // In real app, get from auth
+  const userEmail = getAuthenticatedUserEmail(request) || 'unknown';
+  const context = extractRequestContext(request, userEmail);
 
   try {
     apiLogger.apiRequest('POST', '/api/rentals', { requestId: context.requestId });
 
-    // TODO: Implement Cloudflare Access authentication in Phase 4 (TASK-migration-010)
-    // const isAdmin = await checkCloudflareAccessAdmin(request);
-    // if (!isAdmin) {
-    //   auditLogger.logAccessDenied('admin', 'rental', 'create', {
-    //     ipAddress: context.ipAddress,
-    //     requestId: context.requestId,
-    //   });
-    //   throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
-    // }
+    const isAdmin = checkCloudflareAccessAdmin(request);
+    if (!isAdmin) {
+      auditLogger.logAccessDenied(userEmail, 'rental', 'create', {
+        ipAddress: context.ipAddress,
+        requestId: context.requestId,
+      });
+      throw createAuthError(ErrorCode.FORBIDDEN, "Admin access required");
+    }
 
     const adapter = getD1Adapter();
 
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
 
     // Log successful rental creation
     dataEventLogger.rentalCreated(
-      'admin', // TODO: Get from Cloudflare Access headers in Phase 4
+      userEmail,
       newRental.id,
       newRental.games?.title || 'Unknown Game',
       newRental.name,
