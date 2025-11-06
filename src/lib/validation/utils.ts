@@ -33,7 +33,7 @@ export const validateData = <T>(
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errors: ValidationError[] = error.errors.map((err) => ({
+      const errors: ValidationError[] = error.issues.map((err: any) => ({
         field: err.path.join('.'),
         message: err.message,
         code: err.code,
@@ -98,14 +98,14 @@ export const sanitizeObject = <T extends Record<string, any>>(obj: T): T => {
   
   for (const key in sanitized) {
     if (typeof sanitized[key] === 'string') {
-      sanitized[key] = sanitizeString(sanitized[key]);
+      (sanitized as any)[key] = sanitizeString(sanitized[key]);
     } else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
       if (Array.isArray(sanitized[key])) {
-        sanitized[key] = sanitized[key].map((item: any) =>
+        (sanitized as any)[key] = sanitized[key].map((item: any) =>
           typeof item === 'string' ? sanitizeString(item) : item
         );
       } else {
-        sanitized[key] = sanitizeObject(sanitized[key]);
+        (sanitized as any)[key] = sanitizeObject(sanitized[key]);
       }
     }
   }

@@ -44,12 +44,12 @@ export const useFormValidation = <T extends Record<string, any>>(
   const validateField = useCallback((name: keyof T, value: any): string | undefined => {
     try {
       // Create a partial schema for the specific field
-      const fieldSchema = schema.pick({ [name]: true } as any);
+      const fieldSchema = (schema as z.ZodObject<any>).pick({ [name]: true } as any);
       fieldSchema.parse({ [name]: value });
       return undefined;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return error.errors[0]?.message;
+        return error.issues[0]?.message;
       }
       return 'Validation error';
     }
@@ -167,7 +167,7 @@ export const useFormValidation = <T extends Record<string, any>>(
 
     if (!validation.success) {
       const errors: Record<string, string> = {};
-      validation.errors?.forEach(error => {
+      validation.errors?.forEach((error: any) => {
         errors[error.field] = error.message;
       });
       setErrors(errors);
@@ -223,13 +223,13 @@ export const useFieldValidation = <T>(
 
   const validate = useCallback((value: any) => {
     try {
-      const fieldSchema = schema.pick({ [fieldName]: true } as any);
+      const fieldSchema = (schema as z.ZodObject<any>).pick({ [fieldName]: true } as any);
       fieldSchema.parse({ [fieldName]: value });
       setError(undefined);
       return true;
     } catch (err) {
       if (err instanceof z.ZodError) {
-        setError(err.errors[0]?.message);
+        setError(err.issues[0]?.message);
       } else {
         setError('Validation error');
       }
@@ -245,8 +245,8 @@ export const useFieldValidation = <T>(
  */
 export const zodErrorsToFormErrors = (error: z.ZodError): Record<string, string> => {
   const formErrors: Record<string, string> = {};
-  
-  error.errors.forEach(err => {
+
+  error.issues.forEach((err: any) => {
     const field = err.path.join('.');
     if (!formErrors[field]) {
       formErrors[field] = err.message;
@@ -294,6 +294,7 @@ export const useDebouncedValidation = <T>(
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isValidating, setIsValidating] = useState(false);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const validate = useCallback(
     debounce((data: Partial<T>) => {
       setIsValidating(true);

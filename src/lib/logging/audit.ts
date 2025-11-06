@@ -200,6 +200,35 @@ class AuditLogger {
     this.logEvent(event);
   }
 
+  logSessionExpired(userId: string, metadata?: Record<string, any>): void {
+    const event = this.createAuditEvent(
+      AuditEventType.SESSION_EXPIRED,
+      'Session Expired',
+      `Session expired for user ${userId}`,
+      {
+        userId,
+        severity: AuditSeverity.LOW,
+        metadata,
+      }
+    );
+    this.logEvent(event);
+  }
+
+  logInvalidToken(userId?: string, metadata?: Record<string, any>): void {
+    const event = this.createAuditEvent(
+      AuditEventType.INVALID_TOKEN,
+      'Invalid Token',
+      'Invalid authentication token detected',
+      {
+        userId,
+        severity: AuditSeverity.MEDIUM,
+        success: false,
+        metadata,
+      }
+    );
+    this.logEvent(event);
+  }
+
   // Authorization events
   logAccessDenied(
     userId: string,

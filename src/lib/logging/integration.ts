@@ -145,19 +145,11 @@ export const authEventLogger = {
       userId,
       ...context,
     });
-    
-    auditLogger.logEvent({
-      type: AuditEventType.SESSION_EXPIRED,
-      severity: AuditSeverity.LOW,
-      action: 'Session Expired',
-      description: `Session expired for user ${userId}`,
-      userId,
-      success: true,
-      metadata: {
-        ipAddress: context.ipAddress,
-        userAgent: context.userAgent,
-        requestId: context.requestId,
-      },
+
+    auditLogger.logSessionExpired(userId, {
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+      requestId: context.requestId,
     });
   },
 };
@@ -218,19 +210,11 @@ export const securityEventLogger = {
     securityLogger.warn('Invalid token detected', {
       ...context,
     });
-    
-    auditLogger.logEvent({
-      type: AuditEventType.INVALID_TOKEN,
-      severity: AuditSeverity.MEDIUM,
-      action: 'Invalid Token',
-      description: 'Invalid authentication token detected',
-      userId: context.userId,
-      success: false,
-      metadata: {
-        ipAddress: context.ipAddress,
-        userAgent: context.userAgent,
-        requestId: context.requestId,
-      },
+
+    auditLogger.logInvalidToken(context.userId, {
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+      requestId: context.requestId,
     });
   },
 };
@@ -525,7 +509,7 @@ if (typeof window === 'undefined' && loggingConfig.enabled) {
   maintenanceLogger.scheduleLogCleanup();
 }
 
-export default {
+const loggingIntegration = {
   withEnhancedLogging,
   authEventLogger,
   securityEventLogger,
@@ -537,3 +521,5 @@ export default {
   extractRequestContext,
   generateRequestId,
 };
+
+export default loggingIntegration;

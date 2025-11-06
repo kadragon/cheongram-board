@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -68,7 +69,7 @@ export function GameCard({ game, isAdmin }: { game: Game, isAdmin: boolean }) {
       </CardHeader>
       <CardContent className="flex-grow">
         <Link href={game.koreaboardgames_url || '#'} target="_blank" rel="noopener noreferrer">
-            <img src={game.image_url || '/placeholder.png'} alt={game.title} className="rounded-md object-cover h-48 w-full" />
+        <Image src={game.image_url || '/placeholder.png'} alt={game.title} width={400} height={192} className="rounded-md object-cover h-48 w-full" />
         </Link>
       </CardContent>
       <CardFooter className="flex justify-between items-center text-sm text-gray-500">
