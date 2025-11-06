@@ -20,8 +20,20 @@ export function getAuthenticatedUserEmail(request: NextRequest): string | null {
     return email;
   }
 
-  // For local development, allow bypass with a development header
-  if (process.env.NODE_ENV === 'development') {
+  // For local development and testing, allow bypass with a development header
+  // TEMPORARY: Check Cloudflare env to determine if in dev mode
+  // Trace: SPEC-migration-testing-1, TASK-testing-env-var-fix
+  let isDevMode = false;
+  try {
+    const cloudflareContext = (globalThis as any)[Symbol.for('__cloudflare-context__')];
+    const cfNodeEnv = cloudflareContext?.env?.NODE_ENV;
+    isDevMode = cfNodeEnv === 'development';
+  } catch (e) {
+    // Fallback to process.env if Cloudflare context not available
+    isDevMode = process.env.NODE_ENV === 'development' || process.env.NEXTJS_ENV === 'development';
+  }
+
+  if (isDevMode) {
     const devEmail = request.headers.get('X-Dev-User-Email');
     if (devEmail) {
       return devEmail;
@@ -51,8 +63,20 @@ export function checkCloudflareAccessAdmin(request: NextRequest): boolean {
     return false;
   }
 
-  // Get admin emails from environment variable
-  const adminEmailsStr = process.env.ADMIN_EMAILS || '';
+  // Get admin emails from Cloudflare environment (works in both dev and prod)
+  // Trace: SPEC-migration-testing-1, TASK-testing-env-var-fix
+  let adminEmailsStr = '';
+
+  try {
+    const cloudflareContext = (globalThis as any)[Symbol.for('__cloudflare-context__')];
+    if (cloudflareContext?.env?.ADMIN_EMAILS) {
+      adminEmailsStr = cloudflareContext.env.ADMIN_EMAILS;
+    }
+  } catch (e) {
+    // Fallback to process.env if Cloudflare context is not available (unlikely in Workers)
+    adminEmailsStr = process.env.ADMIN_EMAILS || '';
+  }
+
   const adminEmails = adminEmailsStr
     .split(',')
     .map(email => email.trim().toLowerCase())

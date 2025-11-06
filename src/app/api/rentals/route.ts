@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       requestId: context.requestId
     });
 
-    return createSuccessResponse(newRental, { timestamp: new Date().toISOString() });
+    return createSuccessResponse(newRental, { timestamp: new Date().toISOString() }, 201);
   } catch (error) {
     const duration = Date.now() - startTime;
     apiLogger.apiResponse('POST', '/api/rentals', 500, duration);

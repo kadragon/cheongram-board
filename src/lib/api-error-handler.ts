@@ -78,7 +78,8 @@ export const handleAPIError = (error: unknown): NextResponse<APIErrorResponse> =
  */
 export const createSuccessResponse = <T>(
   data: T,
-  meta?: APISuccessResponse<T>['meta']
+  meta?: APISuccessResponse<T>['meta'],
+  status?: number
 ): NextResponse<APISuccessResponse<T>> => {
   const response: APISuccessResponse<T> = {
     data,
@@ -88,7 +89,7 @@ export const createSuccessResponse = <T>(
     },
   };
 
-  return NextResponse.json(response);
+  return NextResponse.json(response, { status: status || 200 });
 };
 
 /**

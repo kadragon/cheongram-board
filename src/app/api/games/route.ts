@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       duration
     });
 
-    return createSuccessResponse(newGame, { timestamp: new Date().toISOString() });
+    return createSuccessResponse(newGame, { timestamp: new Date().toISOString() }, 201);
   } catch (error) {
     const duration = Date.now() - startTime;
     apiLogger.apiResponse('POST', '/api/games', 500, duration);
