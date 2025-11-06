@@ -10,3 +10,8 @@ routes = [
 directory = ".open-next/assets"
 binding = "ASSETS"
 
+[[d1_databases]]
+binding = "DB"
+database_name = "cheongram-board-db"
+database_id = "77627225-92c1-4b09-94c9-d9cb6c9fcf88"
+
