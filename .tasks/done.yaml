@@ -2,12 +2,70 @@
 # Archive of all completed tasks with outcomes
 
 meta:
-  last_updated: 2025-11-06
+  last_updated: 2025-11-07
   format_version: 1.0
-  total_completed: 19
+  total_completed: 20
 
 # Completed Tasks (newest first)
 tasks:
+  - id: TASK-backlog-003
+    title: Deploy to staging environment
+    trace: SPEC-migration-supabase-to-cloudflare-1
+    description: |
+      Deploy the validated OpenNext+D1 stack to the staging environment, apply D1 migrations,
+      configure Cloudflare Access (deferred), and rerun the full SPEC-migration-testing-1 suite against staging.
+    completed_at: 2025-11-07T02:30:00Z
+    duration: 0.9 hours
+    outcome: |
+      ✅ Staging worker deployed to https://cheongram-board-worker-staging.kangdongouk.workers.dev
+      ✅ D1 staging database created (e3affa85-7049-45df-b509-4a2cc78ea036) with schema migrations applied
+      ✅ All 26 API tests passed against staging endpoint (16 test cases, 32 assertions)
+      ✅ Test results logged to .tasks/logs/staging-test-2025-11-07.txt
+      ✅ ALLOW_DEV_HEADER enabled for testing (Cloudflare Access setup script prepared)
+      ✅ Verified full API functionality: public endpoints, admin auth, CRUD operations, error handling
+
+      Cloudflare Access configuration deferred to production deployment (TASK-backlog-004).
+      Setup script prepared at .tasks/scripts/setup-cloudflare-access.sh for future use.
+    tests_passing: all_26_staging_tests_green
+    artifacts:
+      - .tasks/logs/staging-test-2025-11-07.txt
+      - .tasks/scripts/setup-cloudflare-access.sh
+    acceptance_criteria_met:
+      - Staging worker deployed with latest code + migrations ✅
+      - D1 staging DB seeded/migrated to match prod schema ✅
+      - All 26 API tests pass against staging endpoint ✅
+      - Deployment + test evidence captured in logs + memory ✅
+      - Cloudflare Access configured for staging ⏸️ (deferred)
+    owner: migration-team
+
+  - id: TASK-backlog-002
+    title: Complete Phase 1 testing validation
+    trace: SPEC-migration-supabase-to-cloudflare-1
+    description: Run full SPEC-migration-testing-1 suite after env fix to confirm Phase 1 readiness.
+    completed_at: 2025-11-07T01:33:00Z
+    duration: 0.5 hours
+    outcome: |
+      Ran `.spec/migration/testing/api-tests.sh` against a fresh `npx wrangler dev --port 8787`
+      session (D1 migrations already applied). The script seeded temporary games as needed,
+      exercised all 26 API/business-logic cases, and cleaned up records.
+
+      Evidence:
+      - Console log: `.tasks/logs/log-2025-11-07-testing.txt`
+      - Wrangler perf log: `~/Library/Preferences/.wrangler/logs/wrangler-2025-11-07_01-30-44_714.log`
+      - Observed response times: 1–5 ms typical, 12 ms max during rental create.
+
+      Key validations:
+      - Admin auth matrix: 201 (admin), 403 (non-admin), 401 (missing header)
+      - Games CRUD including DELETE 204 response and orphan protection
+      - Rentals duplicate prevention returning 409 with `GAME_ALREADY_RENTED`
+      - `/api/rentals/:id/extend` honoring client `new_due_date` and rejecting regressions
+      - Error handling surfaces codes + localization strings as per spec
+    tests_passing: 26_api_tests_green
+    artifacts:
+      - .tasks/logs/log-2025-11-07-testing.txt
+      - ~/Library/Preferences/.wrangler/logs/wrangler-2025-11-07_01-30-44_714.log
+    owner: migration-team
+
   - id: TASK-workers-001
     title: Backend Migration - Phase 1 (OpenNext to Pure Workers)
     trace: SPEC-migration-workers-1

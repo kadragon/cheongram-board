@@ -151,9 +151,10 @@ export const createNotFoundError = (
 export const createBusinessLogicError = (
   code: ErrorCode.GAME_ALREADY_RENTED | ErrorCode.RENTAL_NOT_FOUND | ErrorCode.INVALID_OPERATION,
   message: string,
-  userMessage?: string
+  userMessage?: string,
+  statusCode: number = 400
 ): AppError => {
-  return new AppError(code, message, userMessage, 400);
+  return new AppError(code, message, userMessage, statusCode);
 };
 
 // ============================================================================

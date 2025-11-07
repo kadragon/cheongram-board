@@ -25,6 +25,7 @@ import {
   rentalCreateSchema,
   rentalUpdateSchema,
   rentalSearchSchema,
+  rentalExtendSchema,
 } from '../lib/validation';
 import { createNotFoundError, handleDatabaseError, ErrorCode, createBusinessLogicError } from '../lib/errors';
 import { createSuccessResponse, logRequest, logResponse, logError } from '../lib/utils/response';
@@ -120,7 +121,8 @@ app.post('/', validateBody(rentalCreateSchema), async (c) => {
       throw createBusinessLogicError(
         ErrorCode.GAME_ALREADY_RENTED,
         error.message,
-        '이미 대여 중인 게임입니다.'
+        '이미 대여 중인 게임입니다.',
+        409
       );
     }
 
@@ -318,7 +320,7 @@ app.post('/:id/return', async (c) => {
  * Extend rental due date by 14 days.
  * Admin only.
  */
-app.post('/:id/extend', async (c) => {
+app.post('/:id/extend', validateBody(rentalExtendSchema), async (c) => {
   const startTime = Date.now();
 
   try {
@@ -352,11 +354,23 @@ app.post('/:id/extend', async (c) => {
       );
     }
 
-    // Extend due date by 14 days
-    const newDueDate = new Date(currentRental.due_date);
-    newDueDate.setDate(newDueDate.getDate() + 14);
-    const formattedDueDate = newDueDate.toISOString().split('T')[0];
+    const { new_due_date: requestedDueDate } = c.get('validatedBody' as any) as {
+      new_due_date: string;
+    };
 
+    // Ensure the newly requested due date is not earlier than the current due date
+    const currentDueDate = new Date(currentRental.due_date);
+    const desiredDueDate = new Date(requestedDueDate);
+
+    if (desiredDueDate.getTime() <= currentDueDate.getTime()) {
+      throw createBusinessLogicError(
+        ErrorCode.INVALID_OPERATION,
+        'New due date must be after the current due date',
+        '새로운 반납 예정일은 현재 예정일 이후여야 합니다.'
+      );
+    }
+
+    const formattedDueDate = requestedDueDate;
     const extendedRental = await adapter.extendRental(id, formattedDueDate);
 
     const duration = Date.now() - startTime;

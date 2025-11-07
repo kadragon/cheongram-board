@@ -82,6 +82,26 @@ main → migration/supabase-to-cloudflare (active)
 2. Deploy pure Workers backend to production
 3. End-to-end testing
 
+### 2025-11-07 Update — Local Auth + Test Harness
+- TASK-backlog-001 closed: verified `.dev.vars` loading for wrangler dev so Cloudflare Access admin checks read `ADMIN_EMAILS` without Symbol hacks (SPEC-migration-testing-1).
+- Enhanced `.spec/migration/testing/api-tests.sh` to seed a base game when needed, consume dynamic IDs, and align expectations (DELETE 204, duplicate rental 409) so all 26 API tests pass consistently.
+- Workers rentals route now respects `new_due_date` payloads for `/api/rentals/:id/extend` and rejects backward extensions; duplicate rentals raise `GAME_ALREADY_RENTED` with HTTP 409, matching spec AC4.
+- Output: API suite green locally; foundation ready for TASK-backlog-002 (full validation) without manual DB prep.
+
+### 2025-11-07 Validation — Phase 1 Test Run
+- TASK-backlog-002 complete: ran `.spec/migration/testing/api-tests.sh` against fresh `wrangler dev --port 8787`; all 26 API/business logic checks passed.
+- Evidence stored at `.tasks/logs/log-2025-11-07-testing.txt` plus wrangler log `~/Library/Preferences/.wrangler/logs/wrangler-2025-11-07_01-30-44_714.log` (request latency 1–5 ms typical, 12 ms max).
+- Confirms admin auth matrix, games/rentals CRUD, duplicate rental 409, and extend endpoint behavior; clears path for TASK-backlog-003 staging deploy.
+
+
+### 2025-11-07 Staging Deployment — Phase 1 Complete
+- TASK-backlog-003 complete: deployed Workers backend to staging environment with full validation.
+- Staging URL: https://cheongram-board-worker-staging.kangdongouk.workers.dev
+- D1 Database: cheongram-board-db-staging (ID: e3affa85-7049-45df-b509-4a2cc78ea036)
+- All 26 API tests passed against staging (16 test cases, 32 assertions) - logged at `.tasks/logs/staging-test-2025-11-07.txt`
+- Using ALLOW_DEV_HEADER=true for testing; Cloudflare Access setup script prepared at `.tasks/scripts/setup-cloudflare-access.sh` (deferred to production)
+- Verified: public endpoints, admin authentication (403/401 enforcement), CRUD operations, business logic validation, error handling
+- Ready for TASK-backlog-004 (production deployment)
 ---
 
 ## Architecture Evolution

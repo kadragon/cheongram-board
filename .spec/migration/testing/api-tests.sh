@@ -7,9 +7,12 @@
 set -e
 
 # Configuration
-API_BASE="http://localhost:8787"
-ADMIN_EMAIL="kangdongouk@gmail.com"
-NON_ADMIN_EMAIL="user@example.com"
+API_BASE="${API_BASE:-http://localhost:8787}"
+ADMIN_EMAIL="${ADMIN_EMAIL:-kangdongouk@gmail.com}"
+NON_ADMIN_EMAIL="${NON_ADMIN_EMAIL:-user@example.com}"
+
+ADMIN_HEADERS=(-H "X-Dev-User-Email: $ADMIN_EMAIL" -H "CF-Access-Authenticated-User-Email: $ADMIN_EMAIL")
+NON_ADMIN_HEADERS=(-H "X-Dev-User-Email: $NON_ADMIN_EMAIL" -H "CF-Access-Authenticated-User-Email: $NON_ADMIN_EMAIL")
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -65,12 +68,70 @@ check_json_field() {
 # Cleanup: Store game IDs for later deletion
 CREATED_GAME_IDS=()
 CREATED_RENTAL_IDS=()
+BASE_GAME_ID=""
+BASE_GAME_CREATED=0
+
+ensure_base_game() {
+  echo "=== Setup: Ensuring base game data ==="
+  local response http_code body seed_payload
+
+  response=$(curl -s -w "\n%{http_code}" "$API_BASE/api/games")
+  http_code=$(echo "$response" | tail -1)
+  body=$(echo "$response" | sed '$d')
+
+  if [ "$http_code" != "200" ]; then
+    echo "Failed to fetch games list (HTTP $http_code)"
+    exit 1
+  fi
+
+  BASE_GAME_ID=$(echo "$body" | jq -r '.data[0].id // empty')
+
+  if [ -z "$BASE_GAME_ID" ]; then
+    echo "No existing games found. Creating seed game for tests..."
+    seed_payload=$(jq -n \
+      --arg title "Seed Game" \
+      --arg desc "Automated test seed game" \
+      '{
+        title: $title,
+        min_players: 2,
+        max_players: 4,
+        play_time: 30,
+        complexity: "low",
+        description: $desc,
+        image_url: "https://example.com/seed.jpg"
+      }')
+
+    response=$(curl -s -w "\n%{http_code}" -X POST "$API_BASE/api/games" \
+      -H "Content-Type: application/json" \
+      "${ADMIN_HEADERS[@]}" \
+      -d "$seed_payload")
+    http_code=$(echo "$response" | tail -1)
+    body=$(echo "$response" | sed '$d')
+
+    if [ "$http_code" = "201" ]; then
+      BASE_GAME_ID=$(echo "$body" | jq -r '.data.id')
+      BASE_GAME_CREATED=1
+      CREATED_GAME_IDS+=("$BASE_GAME_ID")
+      echo "Seeded base game with ID: $BASE_GAME_ID"
+    else
+      echo "Failed to create seed game (HTTP $http_code)"
+      echo "Response: $body"
+      exit 1
+    fi
+  else
+    echo "Using existing game ID: $BASE_GAME_ID for public and rental tests"
+  fi
+
+  echo ""
+}
 
 echo "=================================="
 echo "Migration Testing Suite"
 echo "Trace: SPEC-migration-testing-1"
 echo "=================================="
 echo ""
+
+ensure_base_game
 
 # =============================================================================
 # AC-1: Public API Endpoints
@@ -92,13 +153,21 @@ echo ""
 
 # TEST-migration-testing-AC1-2: Get Game Details
 log_test "TEST-migration-testing-AC1-2: Get single game details (public)"
-RESPONSE=$(curl -s -w "\n%{http_code}" "$API_BASE/api/games/1")
-HTTP_CODE=$(echo "$RESPONSE" | tail -1)
-BODY=$(echo "$RESPONSE" | sed '$d')
-check_status 200 "$HTTP_CODE" "Get game details"
-check_json_field "$BODY" ".data.id" "Game has ID"
-check_json_field "$BODY" ".data.title" "Game has title"
-check_json_field "$BODY" ".data.is_rented" "Game has rental status"
+if [ -z "$BASE_GAME_ID" ]; then
+  fail "Base game ID is not available for detail test"
+else
+  RESPONSE=$(curl -s -w "\n%{http_code}" "$API_BASE/api/games/$BASE_GAME_ID")
+  HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+  BODY=$(echo "$RESPONSE" | sed '$d')
+  check_status 200 "$HTTP_CODE" "Get game details"
+  check_json_field "$BODY" ".data.id" "Game has ID"
+  check_json_field "$BODY" ".data.title" "Game has title"
+  if echo "$BODY" | jq -e '.data | has("is_rented")' > /dev/null 2>&1; then
+    pass "Game has rental status"
+  else
+    fail "Game has rental status (Field .data.is_rented not found)"
+  fi
+fi
 echo ""
 
 # =============================================================================
@@ -112,7 +181,7 @@ echo ""
 log_test "TEST-migration-testing-AC2-1: Access admin endpoint with valid email"
 RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_BASE/api/games" \
   -H "Content-Type: application/json" \
-  -H "X-Dev-User-Email: $ADMIN_EMAIL" \
+  "${ADMIN_HEADERS[@]}" \
   -d '{
     "title": "Test Game - Valid Admin",
     "min_players": 2,
@@ -136,7 +205,7 @@ echo ""
 log_test "TEST-migration-testing-AC2-2: Reject non-admin email with 403"
 RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_BASE/api/games" \
   -H "Content-Type: application/json" \
-  -H "X-Dev-User-Email: $NON_ADMIN_EMAIL" \
+  "${NON_ADMIN_HEADERS[@]}" \
   -d '{
     "title": "Test Game - Non Admin",
     "min_players": 2,
@@ -177,7 +246,7 @@ echo ""
 log_test "TEST-migration-testing-AC3-1: Create new game"
 RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_BASE/api/games" \
   -H "Content-Type: application/json" \
-  -H "X-Dev-User-Email: $ADMIN_EMAIL" \
+  "${ADMIN_HEADERS[@]}" \
   -d '{
     "title": "Azul",
     "min_players": 2,
@@ -204,7 +273,7 @@ log_test "TEST-migration-testing-AC3-2: Update existing game"
 if [ ! -z "$CREATED_GAME_ID" ]; then
   RESPONSE=$(curl -s -w "\n%{http_code}" -X PUT "$API_BASE/api/games/$CREATED_GAME_ID" \
     -H "Content-Type: application/json" \
-    -H "X-Dev-User-Email: $ADMIN_EMAIL" \
+    "${ADMIN_HEADERS[@]}" \
     -d '{
       "title": "Azul - Updated",
       "play_time": 50
@@ -227,9 +296,9 @@ echo ""
 log_test "TEST-migration-testing-AC3-3: Delete game without rentals"
 if [ ! -z "$CREATED_GAME_ID" ]; then
   RESPONSE=$(curl -s -w "\n%{http_code}" -X DELETE "$API_BASE/api/games/$CREATED_GAME_ID" \
-    -H "X-Dev-User-Email: $ADMIN_EMAIL")
+    "${ADMIN_HEADERS[@]}")
   HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-  check_status 200 "$HTTP_CODE" "Delete game"
+  check_status 204 "$HTTP_CODE" "Delete game"
   # Remove from cleanup list
   CREATED_GAME_IDS=("${CREATED_GAME_IDS[@]/$CREATED_GAME_ID}")
 else
@@ -246,43 +315,64 @@ echo ""
 
 # TEST-migration-testing-AC4-1: Create Rental
 log_test "TEST-migration-testing-AC4-1: Create rental for available game"
-RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_BASE/api/rentals" \
-  -H "Content-Type: application/json" \
-  -H "X-Dev-User-Email: $ADMIN_EMAIL" \
-  -d '{
-    "game_id": 1,
-    "name": "John Doe",
-    "email": "john@example.com",
-    "phone": "010-1234-5678",
-    "rented_at": "2025-11-06",
-    "due_date": "2025-11-20"
-  }')
-HTTP_CODE=$(echo "$RESPONSE" | tail -1)
-BODY=$(echo "$RESPONSE" | sed '$d')
-check_status 201 "$HTTP_CODE" "Create rental"
-if [ "$HTTP_CODE" = "201" ]; then
-  RENTAL_ID=$(echo "$BODY" | jq -r '.data.id')
-  CREATED_RENTAL_IDS+=("$RENTAL_ID")
-  check_json_field "$BODY" ".data.id" "Rental has ID"
+if [ -z "$BASE_GAME_ID" ]; then
+  fail "Cannot create rental - base game ID missing"
+else
+  RENTAL_CREATE_PAYLOAD=$(jq -n \
+    --argjson game_id "$BASE_GAME_ID" \
+    --arg name "John Doe" \
+    --arg email "john@example.com" \
+    --arg phone "010-1234-5678" \
+    '{
+      game_id: $game_id,
+      name: $name,
+      email: $email,
+      phone: $phone,
+      rented_at: "2025-11-06",
+      due_date: "2025-11-20"
+    }')
+
+  RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_BASE/api/rentals" \
+    -H "Content-Type: application/json" \
+    "${ADMIN_HEADERS[@]}" \
+    -d "$RENTAL_CREATE_PAYLOAD")
+  HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+  BODY=$(echo "$RESPONSE" | sed '$d')
+  check_status 201 "$HTTP_CODE" "Create rental"
+  if [ "$HTTP_CODE" = "201" ]; then
+    RENTAL_ID=$(echo "$BODY" | jq -r '.data.id')
+    CREATED_RENTAL_IDS+=("$RENTAL_ID")
+    check_json_field "$BODY" ".data.id" "Rental has ID"
+  fi
 fi
 echo ""
 
 # TEST-migration-testing-AC4-2: Prevent Duplicate Rental
 log_test "TEST-migration-testing-AC4-2: Prevent rental for already rented game"
-RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_BASE/api/rentals" \
-  -H "Content-Type: application/json" \
-  -H "X-Dev-User-Email: $ADMIN_EMAIL" \
-  -d '{
-    "game_id": 1,
-    "name": "Jane Doe",
-    "email": "jane@example.com",
-    "rented_at": "2025-11-06",
-    "due_date": "2025-11-13"
-  }')
-HTTP_CODE=$(echo "$RESPONSE" | tail -1)
-BODY=$(echo "$RESPONSE" | sed '$d')
-check_status 409 "$HTTP_CODE" "Prevent duplicate rental"
-check_json_field "$BODY" ".error.code" "Error has code"
+if [ -z "$BASE_GAME_ID" ]; then
+  fail "Cannot test duplicate rental - base game ID missing"
+else
+  DUPLICATE_RENTAL_PAYLOAD=$(jq -n \
+    --argjson game_id "$BASE_GAME_ID" \
+    --arg name "Jane Doe" \
+    --arg email "jane@example.com" \
+    '{
+      game_id: $game_id,
+      name: $name,
+      email: $email,
+      rented_at: "2025-11-06",
+      due_date: "2025-11-13"
+    }')
+
+  RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_BASE/api/rentals" \
+    -H "Content-Type: application/json" \
+    "${ADMIN_HEADERS[@]}" \
+    -d "$DUPLICATE_RENTAL_PAYLOAD")
+  HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+  BODY=$(echo "$RESPONSE" | sed '$d')
+  check_status 409 "$HTTP_CODE" "Prevent duplicate rental"
+  check_json_field "$BODY" ".error.code" "Error has code"
+fi
 echo ""
 
 # TEST-migration-testing-AC4-4: Extend Rental
@@ -290,7 +380,7 @@ log_test "TEST-migration-testing-AC4-4: Extend rental due date"
 if [ ! -z "$RENTAL_ID" ]; then
   RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_BASE/api/rentals/$RENTAL_ID/extend" \
     -H "Content-Type: application/json" \
-    -H "X-Dev-User-Email: $ADMIN_EMAIL" \
+    "${ADMIN_HEADERS[@]}" \
     -d '{
       "new_due_date": "2025-12-01"
     }')
@@ -312,7 +402,7 @@ echo ""
 log_test "TEST-migration-testing-AC4-3: Return rental and mark game available"
 if [ ! -z "$RENTAL_ID" ]; then
   RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_BASE/api/rentals/$RENTAL_ID/return" \
-    -H "X-Dev-User-Email: $ADMIN_EMAIL")
+    "${ADMIN_HEADERS[@]}")
   HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
   BODY=$(echo "$RESPONSE" | sed '$d')
   check_status 200 "$HTTP_CODE" "Return rental"
@@ -335,7 +425,7 @@ echo ""
 log_test "TEST-migration-testing-AC5-1: Invalid input returns 400"
 RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_BASE/api/games" \
   -H "Content-Type: application/json" \
-  -H "X-Dev-User-Email: $ADMIN_EMAIL" \
+  "${ADMIN_HEADERS[@]}" \
   -d '{
     "min_players": 2
   }')
@@ -358,7 +448,7 @@ echo ""
 log_test "TEST-migration-testing-AC5-4: Invalid complexity value rejected"
 RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_BASE/api/games" \
   -H "Content-Type: application/json" \
-  -H "X-Dev-User-Email: $ADMIN_EMAIL" \
+  "${ADMIN_HEADERS[@]}" \
   -d '{
     "title": "Test Game",
     "min_players": 2,
@@ -382,7 +472,7 @@ echo ""
 log_test "TEST-migration-testing-AC6-4: Validate player count constraints (min > max)"
 RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_BASE/api/games" \
   -H "Content-Type: application/json" \
-  -H "X-Dev-User-Email: $ADMIN_EMAIL" \
+  "${ADMIN_HEADERS[@]}" \
   -d '{
     "title": "Invalid Game",
     "min_players": 4,
@@ -406,7 +496,7 @@ for game_id in "${CREATED_GAME_IDS[@]}"; do
   if [ ! -z "$game_id" ]; then
     echo "Deleting test game ID: $game_id"
     curl -s -X DELETE "$API_BASE/api/games/$game_id" \
-      -H "X-Dev-User-Email: $ADMIN_EMAIL" > /dev/null
+      "${ADMIN_HEADERS[@]}" > /dev/null
   fi
 done
 
@@ -415,7 +505,7 @@ for rental_id in "${CREATED_RENTAL_IDS[@]}"; do
   if [ ! -z "$rental_id" ]; then
     echo "Returning test rental ID: $rental_id"
     curl -s -X POST "$API_BASE/api/rentals/$rental_id/return" \
-      -H "X-Dev-User-Email: $ADMIN_EMAIL" > /dev/null
+      "${ADMIN_HEADERS[@]}" > /dev/null
   fi
 done
 

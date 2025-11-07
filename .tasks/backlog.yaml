@@ -2,7 +2,7 @@
 # This file tracks all pending tasks and open questions
 
 meta:
-  last_updated: 2025-11-06
+  last_updated: 2025-11-07T01:28:30Z
   format_version: 1.0
   status: active
 
@@ -120,56 +120,6 @@ questions:
 
 # Pending Tasks
 tasks:
-  - id: TASK-backlog-001
-    title: Resolve .dev.vars environment variable configuration
-    trace: SPEC-migration-testing-1
-    description: |
-      Fix ADMIN_EMAILS environment variable access for local testing.
-      Required to unblock admin endpoint tests (13/26 tests currently blocked).
-    acceptance_criteria:
-      - .dev.vars file created with ADMIN_EMAILS
-      - Admin authentication working in local development
-      - All admin endpoint tests passing (26/26)
-    priority: critical
-    estimated_effort: 0.5 hours
-    status: pending
-    dependencies: []
-    blocked_by:
-      - Q-008
-
-  - id: TASK-backlog-002
-    title: Complete Phase 1 testing validation
-    trace: SPEC-migration-supabase-to-cloudflare-1
-    description: |
-      Run full test suite after resolving env var issue.
-      Validate all acceptance criteria met.
-    acceptance_criteria:
-      - All 26 API tests passing
-      - Business logic validated
-      - Error handling verified
-      - Performance benchmarks met
-    priority: high
-    estimated_effort: 2 hours
-    status: pending
-    dependencies:
-      - TASK-backlog-001
-
-  - id: TASK-backlog-003
-    title: Deploy to staging environment
-    trace: SPEC-migration-supabase-to-cloudflare-1
-    description: |
-      Deploy current OpenNext + D1 setup to staging for validation
-    acceptance_criteria:
-      - Staging deployment successful
-      - D1 migrations applied to staging database
-      - Cloudflare Access configured for staging
-      - All tests passing in staging
-    priority: high
-    estimated_effort: 3 hours
-    status: pending
-    dependencies:
-      - TASK-backlog-002
-
   - id: TASK-backlog-004
     title: Production deployment (Phase 1 complete)
     trace: SPEC-migration-supabase-to-cloudflare-1

@@ -13,6 +13,7 @@ export interface Env {
   // Environment variables
   NODE_ENV: string;
   ADMIN_EMAILS: string; // Comma-separated list of admin emails
+  ALLOW_DEV_HEADER?: string;
 
   // Optional: KV for future use
   // KV?: KVNamespace;

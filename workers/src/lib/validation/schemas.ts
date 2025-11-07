@@ -143,7 +143,7 @@ export const rentalUpdateSchema = z.object({
 });
 
 export const rentalExtendSchema = z.object({
-  due_date: z
+  new_due_date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, '날짜는 YYYY-MM-DD 형식이어야 합니다.'),
 });

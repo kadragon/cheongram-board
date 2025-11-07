@@ -27,10 +27,11 @@ export function getAuthenticatedUserEmail(c: Context<AppContext>): string | null
     return cfEmail;
   }
 
-  // Check development mode
-  const isDevMode = c.env.NODE_ENV === 'development';
+  // Check development/staging override (allows manual header bypass)
+  const allowDevHeader =
+    c.env.NODE_ENV === 'development' || c.env.ALLOW_DEV_HEADER === 'true';
 
-  if (isDevMode) {
+  if (allowDevHeader) {
     // Allow development header for local testing
     const devEmail = c.req.header('X-Dev-User-Email');
     if (devEmail) {
