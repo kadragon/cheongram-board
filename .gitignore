@@ -36,12 +36,9 @@ node_modules/
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
+# production builds
+web/dist/
+api/dist/
 
 # misc
 .DS_Store
@@ -57,15 +54,8 @@ yarn-error.log*
 .env
 .dev.vars
 
-# vercel
-.vercel
-
 # typescript
 *.tsbuildinfo
-next-env.d.ts
-
-## open-next
-.open-next/
 
 ## wrangler
 .wrangler/

@@ -102,6 +102,43 @@ main → migration/supabase-to-cloudflare (active)
 - Using ALLOW_DEV_HEADER=true for testing; Cloudflare Access setup script prepared at `.tasks/scripts/setup-cloudflare-access.sh` (deferred to production)
 - Verified: public endpoints, admin authentication (403/401 enforcement), CRUD operations, business logic validation, error handling
 - Ready for TASK-backlog-004 (production deployment)
+
+### 2025-11-07 Frontend Separation — Phase 2.2 Complete
+- Successfully separated frontend from Next.js to Vite + React SPA
+- Created frontend/ directory with clean Vite + React architecture
+- Migrated all components (19 UI components + 4 pages)
+- Implemented API client for Workers backend communication
+- Set up React Router for client-side routing
+- Fixed all TypeScript errors (process.env → import.meta.env)
+- Removed all Next.js dependencies (useRouter, Link, Image)
+- Local testing successful: Frontend (http://localhost:3000) + Backend (http://localhost:8787)
+- Homepage and Admin dashboard both rendering correctly
+- Ready for Cloudflare Pages deployment
+
+### 2025-11-07 Pages Deployment — Phase 2.2 Staging Complete
+- **Frontend deployed to Cloudflare Pages staging**: https://1f09738b.cheongram-board-frontend-staging.pages.dev
+- **Pages Project**: cheongram-board-frontend-staging
+- **Backend integration verified**: API calls successfully reaching Workers backend at https://cheongram-board-worker-staging.kangdongouk.workers.dev
+- **Key fixes applied**:
+  - Updated all components (GameCard, GamesTable, RentalsTable) to use centralized apiClient instead of direct fetch calls
+  - Configured environment variables (.env.staging with VITE_API_BASE_URL)
+  - Fixed TypeScript errors in notification system
+  - Added security headers via public/_headers
+  - Configured SPA routing via public/_redirects
+- **Deployment configuration**:
+  - Build script: `npm run build:staging` (TypeScript check + Vite build)
+  - Deploy script: `wrangler pages deploy dist --project-name=cheongram-board-frontend-staging`
+  - Build output: ~470KB total (react-vendor: 33KB, ui-vendor: 91KB, main: 311KB)
+  - Gzipped: ~137KB total
+- **Testing results**:
+  - ✅ Homepage loads correctly with title and navigation
+  - ✅ Admin dashboard accessible with sidebar navigation
+  - ✅ Games management page loads without errors
+  - ✅ API requests correctly routed to Workers backend
+  - ✅ CORS working properly
+  - ✅ No console errors
+  - ✅ Empty data response confirms proper API integration (staging DB empty as expected)
+- **Ready for**: Production deployment of both frontend and backend
 ---
 
 ## Architecture Evolution

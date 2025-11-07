@@ -1,0 +1,38 @@
+{
+  "name": "cheongram-board-api",
+  "version": "3.0.0",
+  "description": "Cheongram Board Game Rental API - Cloudflare Workers",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "npm run build:web && npm run typecheck",
+    "build:web": "cd ../web && npm run build",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:staging": "npm run build && wrangler deploy --env staging",
+    "deploy:production": "npm run build && wrangler deploy --env production",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "hono",
+    "d1",
+    "api"
+  ],
+  "author": "kadragon",
+  "license": "ISC",
+  "dependencies": {
+    "hono": "^4.6.14",
+    "node-html-parser": "^7.0.1",
+    "zod": "^4.0.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "typescript": "^5.8.3",
+    "vitest": "^1.6.0",
+    "wrangler": "^4.24.3"
+  }
+}
