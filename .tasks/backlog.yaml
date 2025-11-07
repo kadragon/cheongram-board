@@ -2,9 +2,13 @@
 # This file tracks all pending tasks and open questions
 
 meta:
-  last_updated: 2025-11-07T01:28:30Z
+  last_updated: 2025-11-07T12:35:00Z
   format_version: 1.0
   status: active
+  notes: |
+    Updated after production deployment completion.
+    Removed obsolete Phase 2/3 tasks (already completed in v3.0.0).
+    Added new tasks for GitHub deployment and production finalization.
 
 # Open Questions and Clarifications
 questions:
@@ -120,39 +124,63 @@ questions:
 
 # Pending Tasks
 tasks:
-
-  - id: TASK-backlog-005
-    title: Begin Phase 2 planning (OpenNext to Pure Workers)
-    trace: SPEC-migration-opennext-to-workers-1
+  - id: TASK-backlog-009
+    title: Setup GitHub deployment automation
+    trace: SPEC-migration-supabase-to-cloudflare-1
     description: |
-      Start Phase 2 migration planning and preparation.
-      Review detailed task plan and assign owners.
+      Configure automated deployments via GitHub Actions or Cloudflare GitHub integration.
+      See .tasks/docs/github-deployment.md for detailed options.
     acceptance_criteria:
-      - Task plan reviewed and approved
-      - Team members assigned to tasks
-      - Development environment prepared
-      - Timeline confirmed
-    priority: medium
-    estimated_effort: 4 hours
+      - GitHub repository created and code pushed
+      - Deployment method chosen (GitHub Actions or Cloudflare integration)
+      - GitHub Secrets configured (if using Actions)
+      - Automated deployment tested
+      - Production and staging environments configured
+    priority: high
+    estimated_effort: 2 hours
     status: pending
     dependencies:
       - TASK-backlog-004
+    reference: .tasks/docs/github-deployment.md
 
-  - id: TASK-backlog-006
-    title: Simplify logging system for Workers
-    trace: SPEC-migration-opennext-to-workers-1, TASK-workers-001.8
+  - id: TASK-backlog-010
+    title: Configure custom domain and DNS
+    trace: SPEC-migration-supabase-to-cloudflare-1
     description: |
-      Current logging system assumes filesystem access.
-      Needs simplification for Phase 2 pure Workers environment.
+      Activate custom domain (crb.kadragon.work) for production.
+      Configure DNS records in Cloudflare dashboard.
     acceptance_criteria:
-      - Logging uses console.log only
-      - Structured JSON format maintained
-      - No filesystem dependencies
-      - Cloudflare Logs integration documented
+      - DNS CNAME record created (crb -> cheongram-board.kangdongouk.workers.dev)
+      - Custom domain verified and active
+      - SSL/TLS certificate configured
+      - Production accessible via https://crb.kadragon.work
     priority: medium
-    estimated_effort: 4 hours
+    estimated_effort: 1 hour
     status: pending
-    dependencies: []
+    dependencies:
+      - TASK-backlog-009
+    notes: |
+      wrangler.toml already configured with custom domain route.
+      Only DNS configuration needed.
+
+  - id: TASK-backlog-011
+    title: Setup Cloudflare Access for admin authentication
+    trace: SPEC-migration-supabase-to-cloudflare-1
+    description: |
+      Configure Zero Trust Access policies to protect /admin/* routes.
+      Replace ALLOW_DEV_HEADER development mode with production auth.
+    acceptance_criteria:
+      - Cloudflare Access application created
+      - Access policy configured for admin email
+      - /admin/* routes protected
+      - Authentication flow tested
+      - Dev header mode disabled in production
+    priority: medium
+    estimated_effort: 2 hours
+    status: pending
+    dependencies:
+      - TASK-backlog-010
+    reference: .tasks/scripts/setup-cloudflare-access.sh
 
   - id: TASK-backlog-007
     title: Document rollback procedures
@@ -248,6 +276,9 @@ tech_debt:
     severity: high
     resolution_plan: Complete Phase 2 migration to pure Workers
     target_completion: Phase 2
+    status: resolved
+    resolved_at: 2025-11-07
+    resolution: Completed in Phase 2 migration. Pure Workers now access env directly.
 
   - id: DEBT-002
     title: Simplify frontend/backend coupling
@@ -257,6 +288,9 @@ tech_debt:
     severity: medium
     resolution_plan: Extract frontend to separate Vite build
     target_completion: Phase 2
+    status: resolved
+    resolved_at: 2025-11-07
+    resolution: Frontend extracted to web/ with Vite build, served via Workers Assets.
 
   - id: DEBT-003
     title: Reduce bundle size
@@ -265,6 +299,9 @@ tech_debt:
     severity: medium
     resolution_plan: Migrate to Hono (14KB framework)
     target_completion: Phase 2
+    status: resolved
+    resolved_at: 2025-11-07
+    resolution: Migrated to Hono. Worker bundle now ~50KB (10x improvement).
 
   - id: DEBT-004
     title: Improve test coverage
