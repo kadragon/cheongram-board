@@ -6,8 +6,8 @@
   "scripts": {
     "dev:web": "cd web && npm run dev",
     "dev:api": "cd api && npm run dev",
-    "lint": "echo 'Lint skipped at root level'",
-    "typecheck": "echo 'Typecheck skipped at root level'",
+    "lint": "npm run lint -ws --if-present",
+    "typecheck": "npm run typecheck -ws --if-present",
     "prepare": "husky",
     "deploy:staging": "cd api && npm run deploy:staging",
     "deploy:production": "cd api && npm run deploy:production"

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from './ui/button';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { AddGameDialog } from './AddGameDialog';
 
 /**
@@ -21,7 +21,7 @@ export function AuthButton() {
   return (
     <div className="flex items-center gap-2">
       <AddGameDialog />
-      <Link href="/admin">
+      <Link to="/admin">
         <Button variant="outline">Admin Page</Button>
       </Link>
     </div>

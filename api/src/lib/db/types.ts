@@ -24,6 +24,7 @@ export interface Game {
   complexity: 'low' | 'medium' | 'high' | null;
   description: string | null;
   image_url: string | null;
+  koreaboardgames_url: string | null;
   created_at: string;
   updated_at: string;
   // Computed fields (not in database)
@@ -74,6 +75,7 @@ export interface CreateGameData {
   complexity?: 'low' | 'medium' | 'high' | null;
   description?: string | null;
   image_url?: string | null;
+  koreaboardgames_url?: string | null;
 }
 
 /**
@@ -87,6 +89,7 @@ export interface UpdateGameData {
   complexity?: 'low' | 'medium' | 'high' | null;
   description?: string | null;
   image_url?: string | null;
+  koreaboardgames_url?: string | null;
 }
 
 /**

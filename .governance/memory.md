@@ -425,8 +425,8 @@ const db = c.env.DB;
 | Environment | Status | URL | Database |
 |-------------|--------|-----|----------|
 | Local | ✅ Working | http://localhost:8787 | Local D1 |
-| Staging | ⏳ Pending | TBD | cheongram-board-db-staging |
-| Production | ⏳ Pending | TBD | cheongram-board-db |
+| Staging | ✅ Working | https://cheongram-board-worker-staging.kangdongouk.workers.dev | cheongram-board-db-staging |
+| Production | ✅ Working | https://cheongram-board-worker.kangdongouk.workers.dev | cheongram-board-db |
 
 ### Previous Deployments (Deprecated)
 

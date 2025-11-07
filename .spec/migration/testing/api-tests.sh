@@ -300,7 +300,11 @@ if [ ! -z "$CREATED_GAME_ID" ]; then
   HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
   check_status 204 "$HTTP_CODE" "Delete game"
   # Remove from cleanup list
-  CREATED_GAME_IDS=("${CREATED_GAME_IDS[@]/$CREATED_GAME_ID}")
+  local temp_array=()
+  for id in "${CREATED_GAME_IDS[@]}"; do
+    [[ $id != "$CREATED_GAME_ID" ]] && temp_array+=("$id")
+  done
+  CREATED_GAME_IDS=("${temp_array[@]}")
 else
   fail "Cannot test delete - no game created"
 fi

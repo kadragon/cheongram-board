@@ -204,10 +204,10 @@ export class D1Adapter {
     const sql = `
       INSERT INTO games (
         title, min_players, max_players, play_time,
-        complexity, description, image_url,
+        complexity, description, image_url, koreaboardgames_url,
         created_at, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const result = await this.db
@@ -220,6 +220,7 @@ export class D1Adapter {
         data.complexity ?? null,
         data.description ?? null,
         data.image_url ?? null,
+        data.koreaboardgames_url ?? null,
         now,
         now
       )
@@ -285,6 +286,10 @@ export class D1Adapter {
     if (data.image_url !== undefined) {
       updates.push('image_url = ?');
       params.push(data.image_url);
+    }
+    if (data.koreaboardgames_url !== undefined) {
+      updates.push('koreaboardgames_url = ?');
+      params.push(data.koreaboardgames_url);
     }
 
     updates.push('updated_at = ?');
@@ -600,6 +605,11 @@ export class D1Adapter {
 
     if (!result.success) {
       throw new Error('Failed to return rental');
+    }
+
+    // Check if any row was actually updated
+    if (!result.meta.changes || result.meta.changes === 0) {
+      throw new Error('Rental not found or already returned');
     }
 
     // Fetch and return the updated rental

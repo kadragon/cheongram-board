@@ -234,10 +234,20 @@ api.route('/scrape', scraperRouter);
 app.route('/api', api);
 
 // Static files (MUST be after API routes)
-app.get('*', serveStatic({ root: './' }));
-
-// SPA fallback: any non-API route → index.html
-app.get('*', serveStatic({ path: './index.html' }));
+// Forward to Workers Assets
+app.get('*', async (c) => {
+  const response = await c.env.ASSETS.fetch(c.req.raw);
+  // If 404, serve index.html (SPA fallback)
+  if (response.status === 404) {
+    const indexResponse = await c.env.ASSETS.fetch(new Request(`${new URL(c.req.url).origin}/index.html`));
+    return new Response(indexResponse.body, {
+      ...indexResponse,
+      status: 200,
+      headers: { ...Object.fromEntries(indexResponse.headers), 'Content-Type': 'text/html;charset=UTF-8' },
+    });
+  }
+  return response;
+});
 
 // 404 handler (API only)
 app.notFound((c) => {

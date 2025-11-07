@@ -185,26 +185,36 @@ export function middleware(request: NextRequest) {
   return response;
 }
 
-export const config = {
-  matcher: '/api/:path*',
-};
 ```
 
-**API Route Pattern**:
+**Hono Middleware Pattern**:
 ```typescript
-export async function POST(request: NextRequest) {
-  // User email already validated by middleware
-  const userEmail = request.headers.get('X-Authenticated-User');
+import { Context, Next } from 'hono';
+import { Env } from '../types';
 
-  // Use for audit logging
-  await auditLogger.logDataEvent('game.created', {
-    userId: userEmail,
-    action: 'create',
-    resource: 'game'
-  });
+export async function authMiddleware(c: Context<{ Bindings: Env }>, next: Next) {
+  const userEmail = c.req.header('CF-Access-Authenticated-User-Email') ||
+                    c.req.header('X-Dev-User-Email');
 
-  // ... rest of route logic
+  if (!userEmail) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  const adminEmails = c.env.ADMIN_EMAILS?.split(',') || [];
+  if (!adminEmails.includes(userEmail)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
+  // Store user email for downstream handlers
+  c.set('userEmail', userEmail);
+  await next();
 }
+
+// Usage in routes:
+app.post('/api/games', authMiddleware, async (c) => {
+  const userEmail = c.get('userEmail');
+  // ... rest of route logic
+});
 ```
 
 ### 2.2 Development Mode Authentication

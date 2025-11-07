@@ -14,14 +14,8 @@ export default function HomePage() {
         setIsLoading(true);
         const result = await apiClient.listGames();
 
-        // Transform API response to match expected format
-        const gamesWithStatus = result.data.map((game: any) => ({
-          ...game,
-          is_rented: game.rentals?.some((rental: any) => !rental.returned_at) || false,
-          due_date: game.rentals?.find((rental: any) => !rental.returned_at)?.due_date || null,
-        }));
-
-        setGames(gamesWithStatus);
+        // API already provides is_rented and return_date
+        setGames(result.data);
       } catch (err: any) {
         console.error('Error fetching games:', err);
         setError(err?.error?.userMessage || err?.error?.message || 'Unknown error');
