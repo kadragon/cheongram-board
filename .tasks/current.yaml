@@ -11,6 +11,28 @@ current_task: null
 
 # Recently Completed (moved from current)
 recently_completed:
+  - id: TASK-backlog-001
+    title: Resolve .dev.vars environment variable configuration
+    trace: SPEC-migration-testing-1
+    completed_at: 2025-11-07T09:40:00Z
+    duration: 0.2 hours
+    outcome: |
+      Successfully configured and tested .dev.vars for Pure Workers backend:
+      ✅ .dev.vars files verified in root and workers/ directories
+      ✅ wrangler.toml updated with migrations_dir pointing to ../migrations
+      ✅ D1 migrations applied successfully to local database
+      ✅ wrangler dev running with env vars loaded (ADMIN_EMAILS, NODE_ENV)
+      ✅ Admin authentication working (authorized users: 200, unauthorized: 403)
+      ✅ Public endpoints accessible without auth
+      ✅ Database operations functional (13 games in test DB)
+
+      Configuration:
+      - workers/.dev.vars contains ADMIN_EMAILS=kangdongouk@gmail.com
+      - workers/wrangler.toml configured with migrations_dir
+      - Root tsconfig.json excludes workers/ directory
+    tests_passing: auth_tests_100_percent
+    owner: migration-team
+
   - id: TASK-workers-001
     title: Backend Migration - Phase 1 (OpenNext to Pure Workers)
     trace: SPEC-migration-workers-1

@@ -14,6 +14,7 @@ NODE_ENV = "production"
 binding = "DB"
 database_name = "cheongram-board-db"
 database_id = "77627225-92c1-4b09-94c9-d9cb6c9fcf88"
+migrations_dir = "../migrations"
 
 # Development configuration
 [env.development]
