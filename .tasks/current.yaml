@@ -9,8 +9,23 @@ meta:
 # Active Task
 current_task: null
 
-# Recently Completed (TASK-backlog-003)
+# Recently Completed (TASK-backlog-004)
 recently_completed_latest:
+  id: TASK-backlog-004
+  title: Production deployment (Phase 1 complete)
+  trace: SPEC-migration-supabase-to-cloudflare-1
+  completed_at: 2025-11-07T12:30:00Z
+  duration: 0.5 hours
+  outcome: |
+    ✅ Production worker deployed: https://cheongram-board.kangdongouk.workers.dev
+    ✅ Database ready, smoke tests passing
+    ✅ GitHub deployment guide created
+    ⏸️  Custom domain & Cloudflare Access setup deferred for GitHub-based deployment
+  deployment_url: https://cheongram-board.kangdongouk.workers.dev
+  owner: migration-team
+
+# Recently Completed (TASK-backlog-003)
+recently_completed_previous:
   id: TASK-backlog-003
   title: Deploy to staging environment
   trace: SPEC-migration-supabase-to-cloudflare-1

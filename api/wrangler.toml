@@ -9,6 +9,11 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 NODE_ENV = "production"
 
+# Custom Domain
+routes = [
+  { pattern = "crb.kadragon.work", custom_domain = true }
+]
+
 # Static Assets (Web)
 [assets]
 directory = "../web/dist"

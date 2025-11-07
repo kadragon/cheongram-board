@@ -1,6 +1,0 @@
-{
-  "version": 1,
-  "description": "Route API requests to Workers backend",
-  "include": ["/*"],
-  "exclude": ["/api/*"]
-}

@@ -386,16 +386,23 @@ const db = c.env.DB;
 ## Next Steps
 
 ### Immediate (Week 1)
-1. **Deploy to Staging** ⏳ PENDING
-   - Run `npm run deploy:staging`
-   - Validate all features
-   - Test authentication
+1. **Deploy to Staging** ✅ COMPLETED (2025-11-07)
+   - Deployed: https://cheongram-board-worker-staging.kangdongouk.workers.dev
+   - All 26 API tests passing
+   - Database: cheongram-board-db-staging
 
-2. **Deploy to Production** ⏳ PENDING
-   - Run `npm run deploy:production`
-   - Configure custom domain
-   - Set up Cloudflare Access
-   - Monitor for 24 hours
+2. **Deploy to Production** ✅ COMPLETED (2025-11-07)
+   - Deployed: https://cheongram-board.kangdongouk.workers.dev
+   - Database: cheongram-board-db
+   - Smoke tests passing
+   - GitHub deployment guide created
+
+3. **Setup GitHub Deployment** ⏳ NEXT
+   - Configure GitHub Actions or Cloudflare GitHub integration
+   - Set up automated deployments
+   - Configure custom domain (crb.kadragon.work)
+   - Set up Cloudflare Access for admin authentication
+   - See: .tasks/docs/github-deployment.md
 
 ### Short-term (Month 1)
 1. Monitoring and alerts setup

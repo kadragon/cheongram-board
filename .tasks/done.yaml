@@ -2,12 +2,51 @@
 # Archive of all completed tasks with outcomes
 
 meta:
-  last_updated: 2025-11-07
+  last_updated: 2025-11-07T12:30:00Z
   format_version: 1.0
-  total_completed: 20
+  total_completed: 21
 
 # Completed Tasks (newest first)
 tasks:
+  - id: TASK-backlog-004
+    title: Production deployment (Phase 1 complete)
+    trace: SPEC-migration-supabase-to-cloudflare-1
+    description: |
+      Final production deployment of Supabase to D1 migration.
+      Initial deployment with .workers.dev domain.
+      GitHub deployment and custom domain configuration deferred.
+    completed_at: 2025-11-07T12:30:00Z
+    duration: 0.5 hours
+    outcome: |
+      ✅ Production worker deployed to https://cheongram-board.kangdongouk.workers.dev
+      ✅ Database: cheongram-board-db (77627225-92c1-4b09-94c9-d9cb6c9fcf88)
+      ✅ All production smoke tests passing (API health, frontend, public endpoints)
+      ✅ Custom domain configuration prepared in wrangler.toml
+      ✅ GitHub deployment guide created at .tasks/docs/github-deployment.md
+
+      Deferred to future setup:
+      - GitHub Actions or Cloudflare GitHub integration for automated deployments
+      - Custom domain DNS configuration (crb.kadragon.work)
+      - Cloudflare Access authentication setup
+      - Monitoring and alerts configuration
+    tests_passing: production_smoke_tests_green
+    artifacts:
+      - .tasks/docs/github-deployment.md
+      - .tasks/scripts/setup-production.sh
+      - .tasks/scripts/verify-production.sh
+    acceptance_criteria_met:
+      - Production deployment successful ✅
+      - Custom domain configured (wrangler.toml) ⏸️ (DNS pending)
+      - Cloudflare Access configured ⏸️ (deferred)
+      - Smoke tests passing ✅
+      - Monitoring enabled (observability=true) ✅
+    deployment_url: https://cheongram-board.kangdongouk.workers.dev
+    notes: |
+      User chose to defer custom domain and Cloudflare Access setup.
+      Future deployment will use GitHub integration instead of manual wrangler deploy.
+      All configuration and documentation prepared for easy future setup.
+    owner: migration-team
+
   - id: TASK-backlog-003
     title: Deploy to staging environment
     trace: SPEC-migration-supabase-to-cloudflare-1

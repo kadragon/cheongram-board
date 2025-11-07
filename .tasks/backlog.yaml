@@ -120,22 +120,6 @@ questions:
 
 # Pending Tasks
 tasks:
-  - id: TASK-backlog-004
-    title: Production deployment (Phase 1 complete)
-    trace: SPEC-migration-supabase-to-cloudflare-1
-    description: |
-      Final production deployment of Supabase to D1 migration
-    acceptance_criteria:
-      - Production deployment successful
-      - Custom domain configured (crb.kadragon.work)
-      - Cloudflare Access configured
-      - Smoke tests passing
-      - Monitoring enabled
-    priority: high
-    estimated_effort: 2 hours
-    status: pending
-    dependencies:
-      - TASK-backlog-003
 
   - id: TASK-backlog-005
     title: Begin Phase 2 planning (OpenNext to Pure Workers)
