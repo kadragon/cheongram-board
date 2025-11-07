@@ -1,0 +1,19 @@
+import { GamesTable } from '@/components/GamesTable';
+import { ScrapeDialog } from '@/components/ScrapeDialog';
+
+export default function AdminGames() {
+  const handleGameAdded = () => {
+    // Trigger refresh via event or state management
+    window.location.reload();
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Game Management</h1>
+        <ScrapeDialog onGameAdded={handleGameAdded} />
+      </div>
+      <GamesTable />
+    </div>
+  );
+}

@@ -1,0 +1,124 @@
+# Current Active Tasks
+# Only ONE task should be in_progress at any time
+
+meta:
+  last_updated: 2025-11-07T01:35:00Z
+  format_version: 1.0
+  status: active
+
+# Active Task
+current_task: null
+
+# Recently Completed (TASK-backlog-004)
+recently_completed_latest:
+  id: TASK-backlog-004
+  title: Production deployment (Phase 1 complete)
+  trace: SPEC-migration-supabase-to-cloudflare-1
+  completed_at: 2025-11-07T12:30:00Z
+  duration: 0.5 hours
+  outcome: |
+    ✅ Production worker deployed: https://cheongram-board.kangdongouk.workers.dev
+    ✅ Database ready, smoke tests passing
+    ✅ GitHub deployment guide created
+    ⏸️  Custom domain & Cloudflare Access setup deferred for GitHub-based deployment
+  deployment_url: https://cheongram-board.kangdongouk.workers.dev
+  owner: migration-team
+
+# Recently Completed (TASK-backlog-003)
+recently_completed_previous:
+  id: TASK-backlog-003
+  title: Deploy to staging environment
+  trace: SPEC-migration-supabase-to-cloudflare-1
+  completed_at: 2025-11-07T02:30:00Z
+  duration: 0.9 hours
+  outcome: |
+    ✅ Staging worker deployed to https://cheongram-board-worker-staging.kangdongouk.workers.dev
+    ✅ D1 staging database created (e3affa85-7049-45df-b509-4a2cc78ea036) with schema migrations applied
+    ✅ All 26 API tests passed against staging endpoint (16 test cases, 32 assertions)
+    ✅ Test results logged to .tasks/logs/staging-test-2025-11-07.txt
+    ✅ ALLOW_DEV_HEADER enabled for testing (Cloudflare Access setup script prepared at .tasks/scripts/setup-cloudflare-access.sh)
+    ✅ Verified full API functionality: public endpoints, admin auth, CRUD operations, error handling
+  tests_passing: all_26_staging_tests_green
+  artifacts:
+    - .tasks/logs/staging-test-2025-11-07.txt
+    - .tasks/scripts/setup-cloudflare-access.sh
+  owner: migration-team
+  notes:
+    - Cloudflare Access not configured (deferred to production deployment)
+    - Using ALLOW_DEV_HEADER=true with X-Dev-User-Email header for testing
+    - All acceptance criteria met except optional Cloudflare Access configuration
+
+# Recently Completed (moved from current)
+recently_completed:
+  - id: TASK-backlog-002
+    title: Complete Phase 1 testing validation
+    trace: SPEC-migration-supabase-to-cloudflare-1
+    completed_at: 2025-11-07T01:33:00Z
+    duration: 0.5 hours
+    outcome: |
+      ✅ Ran the full SPEC-migration-testing-1 suite (26 API/business-logic checks) from a clean
+         wrangler dev session; all tests passed (see .tasks/logs/log-2025-11-07-testing.txt).
+      ✅ Captured wrangler dev performance logs (avg request 1–5ms, peak 12ms) in
+         ~/Library/Preferences/.wrangler/logs/wrangler-2025-11-07_01-30-44_714.log for evidence.
+      ✅ Verified duplicate rental rejection (409), admin auth matrix (201/403/401),
+         rentals extend payload, and CRUD/delete semantics per spec.
+      ✅ Documented findings in memory.md and unblocked downstream TASK-backlog-003 staging deploy.
+    tests_passing: api_suite_26of26
+    artifacts:
+      - .tasks/logs/log-2025-11-07-testing.txt
+      - ~/Library/Preferences/.wrangler/logs/wrangler-2025-11-07_01-30-44_714.log
+    owner: migration-team
+
+  - id: TASK-backlog-001
+    title: Resolve .dev.vars environment variable configuration
+    trace: SPEC-migration-testing-1
+    completed_at: 2025-11-07T01:25:30Z
+    duration: 1.0 hours
+    outcome: |
+      ✅ Synced .dev.vars values across root + workers projects and verified wrangler dev picks
+         up ADMIN_EMAILS/NODE_ENV bindings.
+      ✅ Added deterministic API test setup that seeds a base game when none exists so public +
+         rental flows always have data.
+      ✅ Updated SPEC-migration-testing-1 harness to use dynamic game IDs, expect 204 deletes,
+         and clean up seeded data automatically.
+      ✅ Fixed Workers auth/validation to honor client-provided rental extension dates and to
+         return HTTP 409 for duplicate rentals per AC4 + AC5 requirements.
+      ✅ All 26 API tests in .spec/migration/testing/api-tests.sh now pass locally (admin
+         endpoints accessible: valid 201, non-admin 403, missing header 401).
+    tests_passing: full_api_suite_green
+    owner: migration-team
+
+  - id: TASK-workers-001
+    title: Backend Migration - Phase 1 (OpenNext to Pure Workers)
+    trace: SPEC-migration-workers-1
+    completed_at: 2025-11-07T00:00:00Z
+    duration: 8 hours
+    outcome: |
+      Successfully migrated all backend API routes to Pure Cloudflare Workers:
+      ✅ Hono project structure created (workers/ directory)
+      ✅ D1Adapter ported (720 LOC, zero changes needed)
+      ✅ Auth middleware implemented (Cloudflare Access + dev mode)
+      ✅ Validation middleware ported (Zod schemas)
+      ✅ Error handling system ported
+      ✅ All 14 API endpoints migrated:
+         - Games API (5 endpoints)
+         - Rentals API (7 endpoints)
+         - Scraper API (1 endpoint)
+      ✅ TypeScript: All files passing type check
+      ✅ Bundle size: ~50KB (vs 500KB with OpenNext)
+    tests_passing: pending_local_dev_setup
+    owner: migration-team
+
+# Upcoming (next in queue from backlog)
+upcoming:
+  - id: TASK-backlog-004
+    title: Production deployment (Phase 1 complete)
+    priority: high
+    estimated_effort: 2 hours
+
+# Notes
+notes:
+  - Only one task should be in_progress at a time
+  - Move completed tasks to done.yaml immediately
+  - Update progress regularly (at least daily during active work)
+  - If blocked, create blocker entry and update status

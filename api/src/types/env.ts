@@ -1,0 +1,32 @@
+// Trace: SPEC-migration-workers-1, TASK-workers-001.1, SPEC-migration-pages-to-workers-1
+
+/**
+ * Cloudflare Workers Environment Bindings
+ *
+ * This interface defines all environment variables and bindings
+ * available in the Workers runtime.
+ */
+export interface Env {
+  // D1 Database binding
+  DB: D1Database;
+
+  // Static Assets binding (Frontend)
+  ASSETS: Fetcher;
+
+  // Environment variables
+  NODE_ENV: string;
+  ADMIN_EMAILS: string; // Comma-separated list of admin emails
+  ALLOW_DEV_HEADER?: string;
+
+  // Optional: KV for future use
+  // KV?: KVNamespace;
+}
+
+/**
+ * Hono Context Variables
+ *
+ * Variables that can be stored in the Hono context during request processing.
+ */
+export interface Variables {
+  userEmail?: string;
+}

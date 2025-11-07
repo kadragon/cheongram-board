@@ -1,0 +1,319 @@
+# Task Backlog
+# This file tracks all pending tasks and open questions
+
+meta:
+  last_updated: 2025-11-07T12:35:00Z
+  format_version: 1.0
+  status: active
+  notes: |
+    Updated after production deployment completion.
+    Removed obsolete Phase 2/3 tasks (already completed in v3.0.0).
+    Added new tasks for GitHub deployment and production finalization.
+
+# Open Questions and Clarifications
+questions:
+  - id: Q-001
+    trace: SPEC-devtool-pre-commit-1, TEST-devtool-pre-commit-typecheck
+    title: TypeScript baseline fails for existing Supabase routes
+    description: |
+      Legacy type errors blocking `npm run typecheck` including:
+      - Supabase client `.sql` usage
+      - Response payload typing
+      - Toast cleanup return type
+      - Audit logger visibility
+      - Zod schema helpers
+    proposed_clarification: |
+      Summarize and resolve legacy type errors to unblock pre-commit gates
+    owner: devex-team
+    status: resolved
+    resolution: Type errors fixed in commit fixing Zod API and audit logger issues
+    resolved_at: 2025-11-06
+
+  - id: Q-002
+    trace: SPEC-TBD, TEST-TBD
+    title: performanceMonitor.measureAsync database call structure
+    description: |
+      Supabase queries not executing properly within measureAsync.
+      Need to decide where `await` should be performed (inside/outside measureAsync).
+    proposed_clarification: |
+      Define whether measureAsync should await internally or externally
+    owner: TBD
+    status: in_progress
+    priority: medium
+
+  - id: Q-003
+    trace: SPEC-TBD, TEST-TBD
+    title: Audit/logging helper user identifier passing strategy
+    description: |
+      Need to define how authenticated user info is extracted and injected
+      into auditLogger/dataEventLogger from API routes.
+    proposed_clarification: |
+      Define which layer extracts auth user info and how it's passed to loggers
+    owner: TBD
+    status: open
+    priority: medium
+
+  - id: Q-004
+    trace: SPEC-TBD, TEST-TBD
+    title: AGENTS.md transition to .spec/.agents structure
+    description: |
+      Current `.kiro` based documents need migration to official SDD × TDD structure.
+      Need procedure and responsible party assignment.
+    proposed_clarification: |
+      Define migration procedure from legacy structure to SDD × TDD
+    owner: TBD
+    status: resolved
+    resolution: Completed migration to .spec/, .tasks/, .governance/ structure on 2025-11-06
+    resolved_at: 2025-11-06
+
+  - id: Q-005
+    trace: SPEC-migration-supabase-to-cloudflare-1
+    title: Supabase data migration timing
+    description: |
+      Strategy needed for data synchronization during migration if new data
+      is added during parallel run period.
+    proposed_clarification: |
+      Define sync strategy during parallel operation period
+    owner: migration-team
+    status: resolved
+    resolution: |
+      No parallel run needed. Starting fresh on Cloudflare.
+      No data migration required.
+    resolved_at: 2025-11-06
+
+  - id: Q-006
+    trace: SPEC-migration-supabase-to-cloudflare-1
+    title: Supabase subscription cancellation timing
+    description: |
+      Need to decide retention period after D1 migration (30 days? 60 days?)
+    proposed_clarification: |
+      Decide Supabase retention period post-migration
+    owner: migration-team
+    status: resolved
+    resolution: 0 days. Immediate transition. No existing data.
+    resolved_at: 2025-11-06
+
+  - id: Q-007
+    trace: SPEC-migration-supabase-to-cloudflare-1
+    title: Production migration downtime allowance
+    description: |
+      Clarify if zero-downtime is mandatory or if brief maintenance window is acceptable
+    proposed_clarification: |
+      Confirm downtime requirements for production migration
+    owner: migration-team
+    status: resolved
+    resolution: Starting fresh, so downtime is not a concern. No existing data.
+    resolved_at: 2025-11-06
+
+  - id: Q-008
+    trace: SPEC-migration-testing-1
+    title: Environment variable access in OpenNext
+    description: |
+      ADMIN_EMAILS environment variable not accessible in OpenNext context.
+      Requires .dev.vars or wrangler secrets solution.
+    proposed_clarification: |
+      Implement proper env var access for local and production
+    owner: migration-team
+    status: open
+    priority: critical
+    workaround: |
+      Use .dev.vars file with: ADMIN_EMAILS=kangdongouk@gmail.com
+      Or use: wrangler secret put ADMIN_EMAILS
+    blockers:
+      - All admin endpoint tests blocked until resolved
+
+# Pending Tasks
+tasks:
+  - id: TASK-backlog-009
+    title: Setup GitHub deployment automation
+    trace: SPEC-migration-supabase-to-cloudflare-1
+    description: |
+      Configure automated deployments via GitHub Actions or Cloudflare GitHub integration.
+      See .tasks/docs/github-deployment.md for detailed options.
+    acceptance_criteria:
+      - GitHub repository created and code pushed
+      - Deployment method chosen (GitHub Actions or Cloudflare integration)
+      - GitHub Secrets configured (if using Actions)
+      - Automated deployment tested
+      - Production and staging environments configured
+    priority: high
+    estimated_effort: 2 hours
+    status: pending
+    dependencies:
+      - TASK-backlog-004
+    reference: .tasks/docs/github-deployment.md
+
+  - id: TASK-backlog-010
+    title: Configure custom domain and DNS
+    trace: SPEC-migration-supabase-to-cloudflare-1
+    description: |
+      Activate custom domain (crb.kadragon.work) for production.
+      Configure DNS records in Cloudflare dashboard.
+    acceptance_criteria:
+      - DNS CNAME record created (crb -> cheongram-board.kangdongouk.workers.dev)
+      - Custom domain verified and active
+      - SSL/TLS certificate configured
+      - Production accessible via https://crb.kadragon.work
+    priority: medium
+    estimated_effort: 1 hour
+    status: pending
+    dependencies:
+      - TASK-backlog-009
+    notes: |
+      wrangler.toml already configured with custom domain route.
+      Only DNS configuration needed.
+
+  - id: TASK-backlog-011
+    title: Setup Cloudflare Access for admin authentication
+    trace: SPEC-migration-supabase-to-cloudflare-1
+    description: |
+      Configure Zero Trust Access policies to protect /admin/* routes.
+      Replace ALLOW_DEV_HEADER development mode with production auth.
+    acceptance_criteria:
+      - Cloudflare Access application created
+      - Access policy configured for admin email
+      - /admin/* routes protected
+      - Authentication flow tested
+      - Dev header mode disabled in production
+    priority: medium
+    estimated_effort: 2 hours
+    status: pending
+    dependencies:
+      - TASK-backlog-010
+    reference: .tasks/scripts/setup-cloudflare-access.sh
+
+  - id: TASK-backlog-007
+    title: Document rollback procedures
+    trace: SPEC-migration-supabase-to-cloudflare-1
+    description: |
+      Create comprehensive rollback documentation for emergency scenarios
+    acceptance_criteria:
+      - Rollback steps documented
+      - Recovery time objectives defined
+      - Testing procedures for rollback
+      - Communication plan for incidents
+    priority: low
+    estimated_effort: 2 hours
+    status: pending
+    dependencies:
+      - TASK-backlog-004
+
+  - id: TASK-backlog-008
+    title: Set up monitoring and alerting
+    trace: SPEC-migration-supabase-to-cloudflare-1
+    description: |
+      Configure Cloudflare Analytics and alerts for production
+    acceptance_criteria:
+      - Error rate alerts configured
+      - Response time monitoring enabled
+      - Dashboard created
+      - Alert notifications tested
+    priority: medium
+    estimated_effort: 3 hours
+    status: pending
+    dependencies:
+      - TASK-backlog-004
+
+# Future Enhancements
+enhancements:
+  - id: ENHANCE-001
+    title: Implement caching for frequent queries
+    description: |
+      Add caching layer for frequently accessed game listings
+    priority: low
+    estimated_effort: 4 hours
+    status: proposed
+    benefits:
+      - Reduced database load
+      - Faster response times
+      - Better user experience
+
+  - id: ENHANCE-002
+    title: Add full-text search with FTS5
+    description: |
+      Implement SQLite FTS5 extension for better search capabilities
+    priority: low
+    estimated_effort: 8 hours
+    status: proposed
+    benefits:
+      - Better search relevance
+      - Support for Korean text search
+      - Improved user experience
+
+  - id: ENHANCE-003
+    title: User-level authentication
+    description: |
+      Extend authentication beyond admin-only to support regular users
+    priority: low
+    estimated_effort: 16 hours
+    status: proposed
+    dependencies:
+      - Requires decision on auth provider
+    benefits:
+      - Allow non-admin users to view rentals
+      - User-specific rental history
+      - Self-service rental requests
+
+  - id: ENHANCE-004
+    title: Automated backup and restore
+    description: |
+      Implement automated D1 database backups
+    priority: medium
+    estimated_effort: 6 hours
+    status: proposed
+    benefits:
+      - Data safety
+      - Easy recovery from errors
+      - Point-in-time restoration
+
+# Technical Debt
+tech_debt:
+  - id: DEBT-001
+    title: Remove OpenNext Symbol hacks
+    description: |
+      Current workaround for env var access uses Symbol.for('__cloudflare-context__').
+      Should be removed in Phase 2 migration.
+    severity: high
+    resolution_plan: Complete Phase 2 migration to pure Workers
+    target_completion: Phase 2
+    status: resolved
+    resolved_at: 2025-11-07
+    resolution: Completed in Phase 2 migration. Pure Workers now access env directly.
+
+  - id: DEBT-002
+    title: Simplify frontend/backend coupling
+    description: |
+      Current setup tightly couples React UI with API routes.
+      Should be separated in Phase 2.
+    severity: medium
+    resolution_plan: Extract frontend to separate Vite build
+    target_completion: Phase 2
+    status: resolved
+    resolved_at: 2025-11-07
+    resolution: Frontend extracted to web/ with Vite build, served via Workers Assets.
+
+  - id: DEBT-003
+    title: Reduce bundle size
+    description: |
+      Current worker bundle is ~500KB. Target is <100KB.
+    severity: medium
+    resolution_plan: Migrate to Hono (14KB framework)
+    target_completion: Phase 2
+    status: resolved
+    resolved_at: 2025-11-07
+    resolution: Migrated to Hono. Worker bundle now ~50KB (10x improvement).
+
+  - id: DEBT-004
+    title: Improve test coverage
+    description: |
+      Current coverage is below 80% target. Need more unit tests.
+    severity: low
+    resolution_plan: Add tests incrementally with new features
+    target_completion: Ongoing
+
+# Notes
+notes:
+  - All tasks should reference SPEC-ID and TEST-ID when available
+  - Priority levels: critical, high, medium, low
+  - Status values: pending, in_progress, blocked, completed
+  - Update this file when tasks move to current.yaml or done.yaml
