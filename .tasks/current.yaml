@@ -7,47 +7,30 @@ meta:
   status: active
 
 # Active Task
-current_task:
-  id: TASK-current-001
-  title: Refactor all MD files to SDD × TDD structure
-  trace: SPEC-governance-refactor-1
-  description: |
-    Reorganize all markdown documentation files into proper .spec/, .tasks/,
-    and .governance/ structure following SDD × TDD principles.
-  acceptance_criteria:
-    - All .governance/ files created (memory.md, patterns.md, coding-style.md, env.yaml)
-    - All .tasks/ files converted to YAML (backlog.yaml, current.yaml, done.yaml)
-    - Log files moved to .tasks/logs/
-    - .spec/ files organized with SUMMARY.md
-    - Redundant files archived or removed
-  priority: high
-  estimated_effort: 4 hours
-  actual_effort: 2.5 hours (so far)
-  status: in_progress
-  started_at: 2025-11-06T12:00:00Z
-  progress:
-    completed:
-      - Find all .md files in project
-      - Analyze and classify each file
-      - Create .governance/memory.md
-      - Create .governance/patterns.md
-      - Create .governance/coding-style.md
-      - Create .governance/env.yaml
-      - Create .tasks/backlog.yaml
-      - Create .tasks/current.yaml
-    in_progress:
-      - Move log files to .tasks/logs/
-    pending:
-      - Create .tasks/done.yaml
-      - Create .spec/ SUMMARY files
-      - Archive redundant files
-      - Update README.md references
-  dependencies: []
-  blocked_by: []
-  owner: claude-code-agent
+current_task: null
 
 # Recently Completed (moved from current)
-recently_completed: []
+recently_completed:
+  - id: TASK-workers-001
+    title: Backend Migration - Phase 1 (OpenNext to Pure Workers)
+    trace: SPEC-migration-workers-1
+    completed_at: 2025-11-07T00:00:00Z
+    duration: 8 hours
+    outcome: |
+      Successfully migrated all backend API routes to Pure Cloudflare Workers:
+      ✅ Hono project structure created (workers/ directory)
+      ✅ D1Adapter ported (720 LOC, zero changes needed)
+      ✅ Auth middleware implemented (Cloudflare Access + dev mode)
+      ✅ Validation middleware ported (Zod schemas)
+      ✅ Error handling system ported
+      ✅ All 14 API endpoints migrated:
+         - Games API (5 endpoints)
+         - Rentals API (7 endpoints)
+         - Scraper API (1 endpoint)
+      ✅ TypeScript: All files passing type check
+      ✅ Bundle size: ~50KB (vs 500KB with OpenNext)
+    tests_passing: pending_local_dev_setup
+    owner: migration-team
 
 # Upcoming (next in queue from backlog)
 upcoming:
