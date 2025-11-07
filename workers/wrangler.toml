@@ -1,6 +1,6 @@
-# Trace: SPEC-migration-workers-1, TASK-workers-001.1
+# Trace: SPEC-migration-workers-1, TASK-workers-001.1, SPEC-migration-pages-to-workers-1
 
-name = "cheongram-board-worker"
+name = "cheongram-board"
 main = "src/index.ts"
 compatibility_date = "2024-11-06"
 compatibility_flags = ["nodejs_compat"]
@@ -8,6 +8,11 @@ compatibility_flags = ["nodejs_compat"]
 # Environment variables (non-secret)
 [vars]
 NODE_ENV = "production"
+
+# Static Assets (Frontend)
+[assets]
+directory = "../frontend/dist"
+binding = "ASSETS"
 
 # D1 Database Binding
 [[d1_databases]]

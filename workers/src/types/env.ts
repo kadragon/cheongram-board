@@ -1,4 +1,4 @@
-// Trace: SPEC-migration-workers-1, TASK-workers-001.1
+// Trace: SPEC-migration-workers-1, TASK-workers-001.1, SPEC-migration-pages-to-workers-1
 
 /**
  * Cloudflare Workers Environment Bindings
@@ -9,6 +9,9 @@
 export interface Env {
   // D1 Database binding
   DB: D1Database;
+
+  // Static Assets binding (Frontend)
+  ASSETS: Fetcher;
 
   // Environment variables
   NODE_ENV: string;
