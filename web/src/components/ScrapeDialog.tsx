@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { GameForm } from "./GameForm";
+import { apiClient } from "@/lib/api-client";
 
 export function ScrapeDialog({ onGameAdded }: { onGameAdded: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,21 +27,11 @@ export function ScrapeDialog({ onGameAdded }: { onGameAdded: () => void }) {
     setScrapedData(null);
 
     try {
-      const response = await fetch("/api/scrape", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.details || "Failed to scrape the URL.");
-      }
-
-      const data = await response.json();
-      setScrapedData(data);
+      const result = await apiClient.scrapeGameInfo(url);
+      setScrapedData(result.data);
     } catch (err: any) {
-      setError(err.message);
+      const errorMessage = err?.error?.userMessage || err?.error?.message || "Failed to scrape the URL.";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -62,26 +53,16 @@ export function ScrapeDialog({ onGameAdded }: { onGameAdded: () => void }) {
       if (isNaN(processedData.max_players)) processedData.max_players = null;
       if (isNaN(processedData.play_time)) processedData.play_time = null;
 
+      await apiClient.createGame(processedData);
 
-      const response = await fetch("/api/games", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(processedData),
-      });
-
-      if (response.status === 204) {
-        // Success, no content to parse
-        onGameAdded();
-        setIsOpen(false);
-        resetState();
-      } else if (!response.ok) {
-        // Handle JSON error response
-        const errorData = await response.json();
-        throw new Error(errorData.error || "An unknown error occurred.");
-      }
+      // Success
+      onGameAdded();
+      setIsOpen(false);
+      resetState();
 
     } catch (err: any) {
-      setError(err.message);
+      const errorMessage = err?.error?.userMessage || err?.error?.message || "An unknown error occurred.";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

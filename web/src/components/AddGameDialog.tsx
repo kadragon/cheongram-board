@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "@/lib/notification-system";
+
 export function AddGameDialog() {
   const [url, setUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,7 +39,7 @@ export function AddGameDialog() {
     } catch (error: any) {
       console.error(error);
       // Handle ApiError format
-      const errorMessage = error?.error?.userMessage || '게임 추가에 실패했습니다.';
+      const errorMessage = error?.error?.userMessage || error?.error?.message || '게임 추가에 실패했습니다.';
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);

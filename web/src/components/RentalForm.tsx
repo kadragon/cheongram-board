@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { apiClient } from "@/lib/api-client";
 
 export function RentalForm({
   initialData,
@@ -30,9 +31,12 @@ export function RentalForm({
 
   useEffect(() => {
     const fetchGames = async () => {
-      const response = await fetch("/api/games");
-      const data = await response.json();
-      setGames(data);
+      try {
+        const result = await apiClient.listGames();
+        setGames(result.data);
+      } catch (error) {
+        console.error('Failed to fetch games:', error);
+      }
     };
     fetchGames();
   }, []);

@@ -3,20 +3,27 @@
 import { Button } from './ui/button';
 import { Link } from 'react-router-dom';
 import { AddGameDialog } from './AddGameDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 /**
- * AuthButton component for Cloudflare Access
+ * AuthButton component for JWT authentication
  *
- * In production, authentication is handled by Cloudflare Access.
- * This component simply provides navigation to admin features.
- *
- * For local development, set X-Dev-User-Email header and ensure
- * the email is in ADMIN_EMAILS environment variable.
+ * Shows admin features only for authenticated users.
+ * - Login button: shown when not authenticated
+ * - Add Game + Admin Page: shown when authenticated
  */
 export function AuthButton() {
-  // In Cloudflare Access setup, admin users are determined by CF-Access headers
-  // This component assumes if the user can access the page, they may be an admin
-  // The actual admin check happens at the API level
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center gap-2">
+        <Link to="/login">
+          <Button variant="outline">로그인</Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2">
