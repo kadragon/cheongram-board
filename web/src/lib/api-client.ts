@@ -62,6 +62,11 @@ class ApiClient {
         headers,
       });
 
+      // Handle 204 No Content responses (e.g., DELETE requests)
+      if (response.status === 204) {
+        return { data: null as T, meta: { timestamp: new Date().toISOString() } };
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
