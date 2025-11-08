@@ -32,6 +32,24 @@ main → feat/modernize-homepage-design (active)
 - **Phase**: Planning and documentation complete
 - **Next Task**: TASK-homepage-001 (Modern Hero Section)
 
+### Recent Improvements
+- **Comprehensive Test Coverage Expansion** ✅ COMPLETED (2025-11-08)
+  - Added 30 new unit tests for D1Adapter methods (total: 86 tests)
+  - Implemented complete test coverage for previously untested methods:
+    - `createGame` (3 test cases: success, failure, ID retrieval)
+    - `deleteGame` (4 test cases: success, not found, rented, failure)
+    - `createRental` (4 test cases: success, auto due date, conflict, failure)
+    - `listRentals` (3 test cases: basic, filtering, pagination)
+    - `getRental` (2 test cases: found, not found)
+    - `updateRental` (1 test case: success)
+    - `deleteRental` (3 test cases: success, not found, failure)
+  - Fixed `isGameRented` false case test
+  - Enhanced mock isolation for complex method interactions
+  - **Coverage dramatically improved**: 87.7% statements (from 57.26%)
+  - **Function coverage**: 97.56% (from 80.48%)
+  - **D1Adapter coverage**: 83.26% statements (from 40.85%)
+  - Maintained 100% coverage on validation and error handling modules
+
 ### Project Architecture
 
 **Current: Unified Workers (api + web)** ✅
@@ -242,6 +260,15 @@ wrangler dev --env development
 cd api
 .spec/migration/testing/api-tests.sh
 # → 26 tests, 16 test cases, 32 assertions
+```
+
+**Unit Tests with Coverage**:
+```bash
+cd api && npm run test:coverage
+# → 86 unit tests in api/tests/, 87.7% statement coverage, 97.56% function coverage
+# → D1Adapter: 83.26% coverage (up from 40.85%), comprehensive database operation testing
+# → All filtering scenarios tested: availability, status (active/returned/overdue), date ranges, pagination
+# → Enhanced mock isolation prevents test interference, all tests passing
 ```
 
 **Type Check**:

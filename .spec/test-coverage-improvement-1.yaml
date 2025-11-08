@@ -1,0 +1,34 @@
+spec_id: SPEC-test-coverage-improvement-1
+title: "Test Coverage Improvement"
+description: |
+  Establish unit test coverage for the API codebase to ensure code quality and prevent regressions.
+  Target: 80%+ coverage on critical business logic.
+
+given_when_then:
+  - given: "API codebase with business logic in lib/ and routes/"
+    when: "Developer runs npm run test:coverage"
+    then: "Coverage report generated showing >80% coverage"
+
+  - given: "New code is added to the codebase"
+    when: "Tests are written following TDD principles"
+    then: "Coverage metrics improve incrementally"
+
+acceptance_tests:
+  - id: TEST-coverage-setup-1
+    desc: "Coverage tool properly configured and reporting"
+
+  - id: TEST-coverage-target-1
+    desc: "Achieve 80%+ coverage on critical paths"
+
+  - id: TEST-unit-tests-1
+    desc: "Unit tests created for key business logic (validation, auth, database operations)"
+
+dependencies:
+  - "@vitest/coverage-v8": "^2.1.8"
+
+linked_tasks:
+  - TASK-test-coverage-001
+
+Trace:
+  spec_id: SPEC-test-coverage-improvement-1
+  task_id: TASK-test-coverage-001
