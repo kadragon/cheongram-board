@@ -15,6 +15,7 @@ export interface ScrapedGameData {
   max_players: number | null;
   play_time: number | null;
   image_url: string | null;
+  koreaboardgames_url: string | null;
 }
 
 /**
@@ -97,6 +98,7 @@ export async function scrapeGame(url: string): Promise<ScrapedGameData> {
       max_players,
       play_time,
       image_url: imageUrl,
+      koreaboardgames_url: url,
     };
   } catch (error: any) {
     console.error('Error during scraping:', error.message);

@@ -50,7 +50,14 @@ export function GameCard({ game, isAdmin }: { game: Game, isAdmin: boolean }) {
   return (
     <Card className="flex flex-col relative">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-xl font-bold text-shadow-md">{game.title}</CardTitle>
+        <a
+          href={game.koreaboardgames_url || '#'}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-blue-600 transition-colors"
+        >
+          <CardTitle className="text-xl font-bold text-shadow-md">{game.title}</CardTitle>
+        </a>
         {isAdmin && (
           <Button
             variant="ghost"

@@ -40,6 +40,7 @@ export const gameCreateSchema = z
       .optional()
       .nullable(),
     image_url: urlSchema.optional().nullable(),
+    koreaboardgames_url: urlSchema.optional().nullable(),
     min_players: z
       .number()
       .int('최소 플레이어 수는 정수여야 합니다.')

@@ -92,11 +92,20 @@ class ApiClient {
       if ((error as ApiError).error) {
         throw error;
       }
+
+      // Handle network errors more specifically
+      const errorMessage = error instanceof Error ? error.message : 'Network error';
+      let userMessage = '네트워크 오류가 발생했습니다';
+
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ERR_BLOCKED_BY_CLIENT')) {
+        userMessage = '요청이 차단되었습니다. 광고 차단기나 브라우저 확장 프로그램을 확인해주세요.';
+      }
+
       throw {
         error: {
           code: 'NETWORK_ERROR',
-          message: error instanceof Error ? error.message : 'Network error',
-          userMessage: '네트워크 오류가 발생했습니다',
+          message: errorMessage,
+          userMessage,
           timestamp: new Date().toISOString(),
         },
       } as ApiError;

@@ -38,17 +38,22 @@ export function GamesTable() {
   };
 
   const handleDelete = async (id: number) => {
+    if (!confirm('이 게임을 정말로 삭제하시겠습니까?')) {
+      return;
+    }
+
     try {
       await apiClient.deleteGame(id);
       fetchGames();
     } catch (error: any) {
       console.error("Failed to delete game:", error);
-      alert(`Failed to delete game: ${error.message || 'Unknown error'}`);
+      const errorMessage = error?.error?.userMessage || error?.error?.message || error?.message || '알 수 없는 오류';
+      alert(`게임 삭제 실패: ${errorMessage}`);
     }
   };
 
   const handleBulkDelete = async () => {
-    if (!confirm(`Are you sure you want to delete ${selectedGames.length} games?`)) {
+    if (!confirm(`선택한 ${selectedGames.length}개의 게임을 정말로 삭제하시겠습니까?`)) {
       return;
     }
 
@@ -61,7 +66,7 @@ export function GamesTable() {
       fetchGames();
     } catch (error: any) {
       console.error("Failed to delete games:", error);
-      alert(`Failed to delete some games: ${error.message || 'Unknown error'}`);
+      alert(`일부 게임 삭제 실패: ${error.message || '알 수 없는 오류'}`);
     }
   };
 
