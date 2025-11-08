@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiClient } from "@/lib/api-client";
+import { toast } from "@/lib/notification-system";
 export function AddGameDialog() {
   const [url, setUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,22 +25,21 @@ export function AddGameDialog() {
 
     try {
       // 1. Scrape game data from the provided URL using apiClient
-      const scrapeResponse = await apiClient.scrapeGameInfo(url);
-      const gameData = scrapeResponse.data;
+      const { data: gameData } = await apiClient.scrapeGameInfo(url);
 
       // 2. Add the scraped game to the database using apiClient
       await apiClient.createGame(gameData);
 
       // Success
-      alert('게임이 성공적으로 추가되었습니다.');
+      toast.success('게임이 성공적으로 추가되었습니다.');
       setOpen(false); // Close the dialog
       window.location.reload(); // Refresh the page to show the new game
 
     } catch (error: any) {
       console.error(error);
       // Handle ApiError format
-      const errorMessage = error?.error?.userMessage || error?.message || '게임 추가에 실패했습니다.';
-      alert(errorMessage);
+      const errorMessage = error?.error?.userMessage || '게임 추가에 실패했습니다.';
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
