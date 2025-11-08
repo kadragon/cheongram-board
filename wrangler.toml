@@ -27,18 +27,9 @@ database_name = "cheongram-board-db"
 database_id = "77627225-92c1-4b09-94c9-d9cb6c9fcf88"
 migrations_dir = "migrations"
 
-# Development configuration
+# Development configuration (local only)
 [env.development]
 vars = { NODE_ENV = "development" }
-
-[env.staging]
-vars = { NODE_ENV = "staging", ADMIN_EMAILS = "kangdongouk@gmail.com", ALLOW_DEV_HEADER = "true" }
-
-[[env.staging.d1_databases]]
-binding = "DB"
-database_name = "cheongram-board-db-staging"
-database_id = "e3affa85-7049-45df-b509-4a2cc78ea036"
-migrations_dir = "migrations"
 
 # Observability
 [observability]

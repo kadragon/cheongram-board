@@ -1,11 +1,11 @@
 # Project Memory and Context
 
 ```yaml
-last_updated: 2025-11-07
+last_updated: 2025-11-08
 project: cheongram-board
 version: 3.0.0
-status: migration_complete
-current_phase: ready_for_staging_deployment
+status: production_ready
+current_phase: simplified_deployment
 ```
 
 ## Project Overview
@@ -218,16 +218,16 @@ cd api && npm run dev  # → http://localhost:8787
 
 ### Deployment
 
-**Staging**:
+**Production** (simplified):
 ```bash
-npm run deploy:staging
-# → Builds web/ and deploys api/ to staging
+npm run deploy
+# → Builds web/ and deploys unified Workers to production
 ```
 
-**Production**:
+**Development Environment** (local only):
 ```bash
-npm run deploy:production
-# → Builds web/ and deploys api/ to production
+wrangler dev --env development
+# → Uses development configuration with local D1
 ```
 
 ### Testing
@@ -385,17 +385,16 @@ const db = c.env.DB;
 
 ## Next Steps
 
-### Immediate (Week 1)
-1. **Deploy to Staging** ✅ COMPLETED (2025-11-07)
-   - Deployed: https://cheongram-board-worker-staging.kangdongouk.workers.dev
-   - All 26 API tests passing
-   - Database: cheongram-board-db-staging
-
-2. **Deploy to Production** ✅ COMPLETED (2025-11-07)
+### Immediate
+1. **Deploy to Production** ✅ COMPLETED (2025-11-07)
    - Deployed: https://cheongram-board.kangdongouk.workers.dev
    - Database: cheongram-board-db
    - Smoke tests passing
-   - GitHub deployment guide created
+
+2. **Simplify Deployment** ✅ COMPLETED (2025-11-08)
+   - Removed staging environment (unnecessary for project scale)
+   - Removed duplicate wrangler.toml files
+   - Single production deployment workflow
 
 3. **Setup GitHub Deployment** ⏳ NEXT
    - Configure GitHub Actions or Cloudflare GitHub integration
@@ -425,13 +424,13 @@ const db = c.env.DB;
 | Environment | Status | URL | Database |
 |-------------|--------|-----|----------|
 | Local | ✅ Working | http://localhost:8787 | Local D1 |
-| Staging | ✅ Working | https://cheongram-board-worker-staging.kangdongouk.workers.dev | cheongram-board-db-staging |
-| Production | ✅ Working | https://cheongram-board-worker.kangdongouk.workers.dev | cheongram-board-db |
+| Production | ✅ Working | https://cheongram-board.kangdongouk.workers.dev | cheongram-board-db |
 
 ### Previous Deployments (Deprecated)
 
 | Service | Status | Notes |
 |---------|--------|-------|
+| Staging Environment | ❌ Removed (2025-11-08) | Unnecessary for small-scale project |
 | Pages (staging) | ❌ Deleted | Migrated to Workers |
 | Workers (backend only) | ❌ Deprecated | Unified with frontend |
 
@@ -475,6 +474,7 @@ const db = c.env.DB;
 - Should have started with api/web naming
 - Earlier adoption of pure Workers
 - More upfront research on Static Assets
+- Should have avoided creating a staging environment for small-scale projects
 
 ### Recommendations for Future
 1. Start with Cloudflare-native solutions
