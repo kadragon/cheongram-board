@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 
+const SCROLL_THRESHOLD = 100;
+
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 100);
+      setIsScrolled(window.scrollY > SCROLL_THRESHOLD);
     };
 
     window.addEventListener("scroll", handleScroll);

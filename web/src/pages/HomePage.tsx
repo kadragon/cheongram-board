@@ -43,7 +43,7 @@ export default function HomePage() {
       <>
         <Header />
         <div className="container mx-auto p-4">
-          <HeroSection totalGames={0} availableGames={0} />
+          <HeroSection totalGames={0} availableGames={0} isLoading={true} />
 
           <div className="flex justify-between items-center mb-6 mt-8">
             <div>
