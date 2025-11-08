@@ -48,7 +48,7 @@ export function GameCard({ game, isAdmin }: { game: Game, isAdmin: boolean }) {
   };
 
   return (
-    <Card className="flex flex-col relative">
+    <Card className="flex flex-col relative transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:-translate-y-1">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <a
           href={game.koreaboardgames_url || '#'}
@@ -71,7 +71,11 @@ export function GameCard({ game, isAdmin }: { game: Game, isAdmin: boolean }) {
       </CardHeader>
       <CardContent className="flex-grow">
         <a href={game.koreaboardgames_url || '#'} target="_blank" rel="noopener noreferrer">
-          <img src={game.image_url || '/placeholder.png'} alt={game.title} className="rounded-md object-cover h-48 w-full" />
+          <img
+            src={game.image_url || '/placeholder.png'}
+            alt={game.title}
+            className="rounded-md object-cover h-48 w-full transition-transform duration-300 hover:scale-105"
+          />
         </a>
       </CardContent>
       <CardFooter className="flex justify-between items-center text-sm text-gray-500">
