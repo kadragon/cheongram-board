@@ -51,6 +51,7 @@ export async function verifyToken(
 ): Promise<JWTPayload | null> {
   try {
     // Verify token signature and expiration
+    // Note: jwt.verify() already checks expiration automatically
     const isValid = await jwt.verify(token, secret, { algorithm: 'HS256' });
 
     if (!isValid) {
@@ -65,12 +66,6 @@ export async function verifyToken(
     }
 
     const payload = decoded.payload as JWTPayload;
-
-    // Double-check expiration
-    const now = Math.floor(Date.now() / 1000);
-    if (payload.exp < now) {
-      return null;
-    }
 
     return payload;
   } catch (error) {

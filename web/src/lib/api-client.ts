@@ -67,9 +67,18 @@ class ApiClient {
       if (!response.ok) {
         // Handle 401 Unauthorized - redirect to login
         if (response.status === 401 && endpoint !== '/api/auth/login') {
-          // Clear invalid token
+          // Clear invalid/expired token
           localStorage.removeItem(AUTH_STORAGE_KEY);
           localStorage.removeItem('cheongram_auth_email');
+
+          // Show user-friendly message for token expiration
+          const errorData = data as ApiError;
+          const isTokenExpired = errorData.error?.code === 'UNAUTHORIZED' ||
+                                 errorData.error?.message?.includes('expired');
+
+          if (isTokenExpired) {
+            console.warn('Session expired, redirecting to login');
+          }
 
           // Redirect to login page
           window.location.href = '/login';

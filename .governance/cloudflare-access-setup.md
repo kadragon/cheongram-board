@@ -1,14 +1,39 @@
 # Cloudflare Access Setup Guide
 
+> **⚠️ DEPRECATED**
+>
+> This authentication method has been replaced with JWT-based email+password authentication.
+>
+> **New Authentication**: See `.spec/auth/spec.yaml` for the current authentication implementation.
+>
+> This document is kept for historical reference only.
+
+---
+
 **Trace**: TASK-admin-auth-001
 **Date**: 2025-11-08
-**Purpose**: Enable admin authentication for cheongram-board production
+**Status**: DEPRECATED (replaced by SPEC-auth-email-password-1)
+**Purpose**: ~~Enable admin authentication for cheongram-board production~~ (DEPRECATED)
 
 ---
 
 ## Overview
 
-This guide walks through setting up Cloudflare Access to protect admin endpoints
+**This guide is no longer used.**
+
+The application previously used Cloudflare Access to protect admin endpoints.
+This has been replaced with a JWT-based email+password authentication system.
+
+For current authentication setup, refer to:
+- Specification: `.spec/auth/spec.yaml`
+- Backend Implementation: `api/src/routes/auth.ts`
+- Frontend Implementation: `web/src/contexts/AuthContext.tsx`
+
+---
+
+## Historical Documentation (DEPRECATED)
+
+This guide previously walked through setting up Cloudflare Access to protect admin endpoints
 of the cheongram-board application at `crb.kadragon.work`.
 
 ---

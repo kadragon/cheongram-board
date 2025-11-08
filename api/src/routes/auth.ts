@@ -11,6 +11,7 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import type { Env, Variables } from '../types/env';
 import { generateToken } from '../lib/auth/jwt';
+import { verifyPassword } from '../lib/auth/password';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -85,9 +86,9 @@ app.post('/login', zValidator('json', loginSchema), async (c) => {
     );
   }
 
-  // Validate password
-  // NOTE: For MVP, using simple comparison. Future: use bcrypt for hashing
-  if (password !== adminPassword) {
+  // Validate password using bcrypt
+  const isPasswordValid = await verifyPassword(password, adminPassword);
+  if (!isPasswordValid) {
     return c.json(
       {
         error: {

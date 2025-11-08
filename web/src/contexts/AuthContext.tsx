@@ -5,9 +5,11 @@
  *
  * Manages authentication state and provides login/logout functionality.
  * Stores JWT token in localStorage for persistence.
+ * Validates token expiration on load and before usage.
  */
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { jwtDecode } from 'jwt-decode';
 
 interface AuthState {
   token: string | null;
@@ -26,6 +28,30 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const AUTH_STORAGE_KEY = 'cheongram_auth_token';
 const EMAIL_STORAGE_KEY = 'cheongram_auth_email';
 
+interface JWTPayload {
+  email: string;
+  exp: number;
+  iat: number;
+}
+
+/**
+ * Check if JWT token is expired
+ */
+function isTokenExpired(token: string): boolean {
+  try {
+    const decoded = jwtDecode<JWTPayload>(token);
+    const currentTime = Math.floor(Date.now() / 1000);
+
+    // Check if token is expired or will expire in the next 5 minutes
+    // This provides a buffer for token refresh
+    const expirationBuffer = 5 * 60; // 5 minutes in seconds
+    return decoded.exp < (currentTime + expirationBuffer);
+  } catch (error) {
+    console.error('Failed to decode JWT token:', error);
+    return true; // Treat invalid tokens as expired
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>({
     token: null,
@@ -42,12 +68,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const email = localStorage.getItem(EMAIL_STORAGE_KEY);
 
         if (token && email) {
-          // TODO: Optionally verify token hasn't expired
-          setAuthState({
-            token,
-            email,
-            isAuthenticated: true,
-          });
+          // Verify token hasn't expired
+          if (isTokenExpired(token)) {
+            console.warn('Stored token has expired, clearing auth state');
+            localStorage.removeItem(AUTH_STORAGE_KEY);
+            localStorage.removeItem(EMAIL_STORAGE_KEY);
+          } else {
+            setAuthState({
+              token,
+              email,
+              isAuthenticated: true,
+            });
+          }
         }
       } catch (error) {
         console.error('Failed to load auth state:', error);
