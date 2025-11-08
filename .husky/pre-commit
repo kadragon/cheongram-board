@@ -13,4 +13,4 @@ echo "[pre-commit] Running typecheck..."
 npm run typecheck
 
 echo "[pre-commit] Running tests..."
-cd api && npm test
+(cd api && npm test)

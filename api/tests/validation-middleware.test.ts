@@ -96,8 +96,8 @@ describe('Validation Middleware', () => {
   describe('validateQuery', () => {
     it('should validate and store valid query parameters', async () => {
       const testSchema = z.object({
-        page: z.coerce.number().int().min(1),
-        limit: z.coerce.number().int().min(1).max(100),
+        page: z.number().int().min(1),
+        limit: z.number().int().min(1).max(100),
       });
 
       const middleware = validationMiddleware.validateQuery(testSchema);
@@ -115,8 +115,8 @@ describe('Validation Middleware', () => {
 
     it('should return 400 for invalid query parameters', async () => {
       const testSchema = z.object({
-        page: z.coerce.number().int().min(1, 'Must be positive number'),
-        limit: z.coerce.number().int().min(1),
+        page: z.number().int().min(1, 'Must be positive number'),
+        limit: z.number().int().min(1),
       });
 
       const middleware = validationMiddleware.validateQuery(testSchema);

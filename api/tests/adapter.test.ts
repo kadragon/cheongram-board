@@ -13,11 +13,6 @@ const createIsolatedMockD1Database = () => {
     run: vi.fn(),
   };
 
-  // Ensure each method returns a fresh mock instance with undefined default
-  Object.keys(mock).forEach(key => {
-    mock[key as keyof typeof mock].mockClear();
-  });
-
   return mock;
 };
 
@@ -805,12 +800,8 @@ describe('D1Adapter - Enhanced Mock Isolation', () => {
 
       it('should filter by overdue status', async () => {
         // Mock today's date as 2025-11-10 (past due dates will be overdue)
-        const originalDate = Date;
-        global.Date = class extends Date {
-          toISOString() {
-            return '2025-11-10T00:00:00.000Z';
-          }
-        } as any;
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2025-11-10T00:00:00.000Z'));
 
         const mockRentals = [
           {
@@ -838,7 +829,7 @@ describe('D1Adapter - Enhanced Mock Isolation', () => {
           expect(result.data).toHaveLength(1);
           expect(result.data[0].name).toBe('Overdue Renter');
         } finally {
-          global.Date = originalDate;
+          vi.useRealTimers();
         }
       });
 
