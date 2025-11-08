@@ -124,6 +124,100 @@ questions:
 
 # Pending Tasks
 tasks:
+  - id: TASK-homepage-001
+    title: Implement Modern Hero Section
+    trace: SPEC-homepage-modernization-1
+    description: |
+      Create a modern hero section with:
+      - Animated gradient background
+      - Welcome message and tagline
+      - Statistics display (total games, available games)
+      - Search/filter preview
+      - Smooth fade-in animation on mount
+    acceptance_criteria:
+      - Hero section displays with gradient background and statistics
+      - Animations trigger smoothly on page load
+      - Responsive design for mobile/tablet/desktop
+      - Statistics update dynamically based on game data
+    priority: high
+    estimated_effort: 2h
+    status: pending
+    dependencies: []
+    test_refs:
+      - TEST-hero-section-1
+      - TEST-animations-1
+
+  - id: TASK-homepage-002
+    title: Improve Layout and Navigation
+    trace: SPEC-homepage-modernization-1
+    description: |
+      Enhance overall layout:
+      - Create sticky header with smooth transition
+      - Improve game card hover effects (lift, shadow, scale)
+      - Add section separators (Featured, All Games)
+      - Improve spacing and typography hierarchy
+    acceptance_criteria:
+      - Header becomes sticky after scrolling past threshold
+      - Game cards have smooth hover effects
+      - Clear visual hierarchy between sections
+      - Improved spacing and typography
+    priority: high
+    estimated_effort: 1.5h
+    status: pending
+    dependencies:
+      - TASK-homepage-001
+    test_refs:
+      - TEST-sticky-header-1
+      - TEST-card-hover-1
+
+  - id: TASK-homepage-003
+    title: Add Dark Mode Support
+    trace: SPEC-homepage-modernization-1
+    description: |
+      Implement dark mode functionality:
+      - Create theme context/provider
+      - Add toggle button in header
+      - Implement smooth theme transition
+      - Persist user preference in localStorage
+      - Ensure all components support dark mode
+    acceptance_criteria:
+      - Dark mode toggle switches theme correctly
+      - Theme preference persists across sessions
+      - Smooth transition between themes
+      - All components render correctly in dark mode
+    priority: medium
+    estimated_effort: 1h
+    status: pending
+    dependencies:
+      - TASK-homepage-002
+    test_refs:
+      - TEST-dark-mode-1
+
+  - id: TASK-homepage-004
+    title: Add Micro-animations and Loading States
+    trace: SPEC-homepage-modernization-1
+    description: |
+      Implement subtle animations:
+      - Stagger animation for game cards on mount
+      - Skeleton UI for loading state
+      - Smooth transitions for all interactive elements
+      - Page transition animations
+      - Install and configure Framer Motion
+    acceptance_criteria:
+      - Page elements fade in with stagger animation on mount
+      - Loading state shows skeleton UI instead of plain text
+      - All transitions are smooth and performant
+      - Animations respect user's motion preferences
+    priority: medium
+    estimated_effort: 1.5h
+    status: pending
+    dependencies:
+      - TASK-homepage-003
+    test_refs:
+      - TEST-animations-1
+      - TEST-skeleton-1
+
+
   - id: TASK-backlog-009
     title: Setup GitHub deployment automation
     trace: SPEC-migration-supabase-to-cloudflare-1

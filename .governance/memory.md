@@ -20,12 +20,17 @@ Board game rental management system (청람보드) for Cheongram Church, built a
 
 ---
 
-## Current State (As of 2025-11-07)
+## Current State (As of 2025-11-08)
 
 ### Branch Status
 ```
-main → migration/supabase-to-cloudflare (active)
+main → feat/modernize-homepage-design (active)
 ```
+
+### Current Work
+- **Active Spec**: SPEC-homepage-modernization-1
+- **Phase**: Planning and documentation complete
+- **Next Task**: TASK-homepage-001 (Modern Hero Section)
 
 ### Project Architecture
 
@@ -403,13 +408,19 @@ const db = c.env.DB;
    - Set up Cloudflare Access for admin authentication
    - See: .tasks/docs/github-deployment.md
 
-### Short-term (Month 1)
-1. Monitoring and alerts setup
-2. Backup/restore procedures
-3. Performance optimization
+### Short-term (Week 1)
+1. **Homepage Modernization** 🔄 IN PROGRESS
+   - Modern hero section with animations
+   - Sticky header and improved layout
+   - Dark mode toggle
+   - Micro-animations and skeleton UI
+   - Target: 6 hours total effort
+
+2. Monitoring and alerts setup
+3. Backup/restore procedures
 4. User documentation
 
-### Long-term (Month 2-3)
+### Long-term (Month 1-2)
 1. Consider Durable Objects for real-time features
 2. Implement Cron triggers for maintenance
 3. Add comprehensive logging (Logpush)
