@@ -1,6 +1,8 @@
+// Trace: SPEC-auth-email-password-1, REQ-FE-003
 // API Client for Cloudflare Workers backend
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const AUTH_STORAGE_KEY = 'cheongram_auth_token';
 
 export interface ApiResponse<T> {
   data: T;
@@ -43,8 +45,14 @@ class ApiClient {
       ...options?.headers,
     };
 
-    // Add dev header in development
-    if (import.meta.env.DEV) {
+    // Add JWT token from localStorage if available
+    const token = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (token) {
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    }
+
+    // Add dev header in development (fallback for local testing)
+    if (import.meta.env.DEV && !token) {
       (headers as Record<string, string>)['X-Dev-User-Email'] = 'kangdongouk@gmail.com';
     }
 
@@ -57,6 +65,25 @@ class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle 401 Unauthorized - redirect to login
+        if (response.status === 401 && endpoint !== '/api/auth/login') {
+          // Clear invalid/expired token
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+          localStorage.removeItem('cheongram_auth_email');
+
+          // Show user-friendly message for token expiration
+          const errorData = data as ApiError;
+          const isTokenExpired = errorData.error?.code === 'UNAUTHORIZED' ||
+                                 errorData.error?.message?.includes('expired');
+
+          if (isTokenExpired) {
+            console.warn('Session expired, redirecting to login');
+          }
+
+          // Redirect to login page
+          window.location.href = '/login';
+        }
+
         throw data as ApiError;
       }
 
@@ -185,6 +212,20 @@ class ApiClient {
     return this.request<any>('/api/scrape', {
       method: 'POST',
       body: JSON.stringify({ url }),
+    });
+  }
+
+  // Auth API
+  async login(email: string, password: string) {
+    return this.request<{ token: string; email: string; expiresIn: number }>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
+  async logout() {
+    return this.request<{ message: string }>('/api/auth/logout', {
+      method: 'POST',
     });
   }
 }

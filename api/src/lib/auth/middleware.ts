@@ -1,33 +1,47 @@
-// Trace: SPEC-migration-workers-1, TASK-workers-001.3
+// Trace: SPEC-migration-workers-1, TASK-workers-001.3, SPEC-auth-email-password-1, REQ-BE-003
 
 /**
  * Authentication Middleware for Hono
  *
- * Provides authentication via Cloudflare Access headers.
- * Supports both production (CF-Access-Authenticated-User-Email) and
- * development (X-Dev-User-Email) modes.
+ * Provides authentication via JWT tokens.
+ * Supports both production (JWT Bearer token) and
+ * development (X-Dev-User-Email) modes for backward compatibility.
  */
 
 import { Context, Next } from 'hono';
 import type { Env, Variables } from '../../types/env';
+import { verifyToken, extractBearerToken } from './jwt';
 
 type AppContext = { Bindings: Env; Variables: Variables };
 
 /**
  * Get authenticated user email from request headers
  *
- * Checks:
- * 1. Production: CF-Access-Authenticated-User-Email header (set by Cloudflare Access)
- * 2. Development: X-Dev-User-Email header (for local testing)
+ * Checks in priority order:
+ * 1. JWT Bearer token in Authorization header (primary method)
+ * 2. Development: X-Dev-User-Email header (for local testing only)
+ * 3. Legacy: CF-Access-Authenticated-User-Email header (deprecated)
  */
-export function getAuthenticatedUserEmail(c: Context<AppContext>): string | null {
-  // Check Cloudflare Access header (production)
-  const cfEmail = c.req.header('CF-Access-Authenticated-User-Email');
-  if (cfEmail) {
-    return cfEmail;
+export async function getAuthenticatedUserEmail(c: Context<AppContext>): Promise<string | null> {
+  // 1. Check JWT Bearer token (primary authentication method)
+  const authHeader = c.req.header('Authorization');
+  if (authHeader) {
+    const token = extractBearerToken(authHeader);
+    if (token) {
+      const jwtSecret = c.env.JWT_SECRET;
+      if (!jwtSecret) {
+        console.error('JWT_SECRET not configured');
+        return null;
+      }
+
+      const payload = await verifyToken(token, jwtSecret);
+      if (payload && payload.email) {
+        return payload.email;
+      }
+    }
   }
 
-  // Check development/staging override (allows manual header bypass)
+  // 2. Check development/staging override (allows manual header bypass)
   const allowDevHeader =
     c.env.NODE_ENV === 'development' || c.env.ALLOW_DEV_HEADER === 'true';
 
@@ -37,6 +51,12 @@ export function getAuthenticatedUserEmail(c: Context<AppContext>): string | null
     if (devEmail) {
       return devEmail;
     }
+  }
+
+  // 3. Check Cloudflare Access header (legacy, deprecated)
+  const cfEmail = c.req.header('CF-Access-Authenticated-User-Email');
+  if (cfEmail) {
+    return cfEmail;
   }
 
   return null;
@@ -66,7 +86,7 @@ export function isAdmin(c: Context<AppContext>, userEmail: string): boolean {
  * Stores user email in context for downstream use.
  */
 export async function requireAuth(c: Context<AppContext>, next: Next) {
-  const userEmail = getAuthenticatedUserEmail(c);
+  const userEmail = await getAuthenticatedUserEmail(c);
 
   if (!userEmail) {
     return c.json(
@@ -96,7 +116,7 @@ export async function requireAuth(c: Context<AppContext>, next: Next) {
  * Stores user email in context for downstream use.
  */
 export async function requireAdmin(c: Context<AppContext>, next: Next) {
-  const userEmail = getAuthenticatedUserEmail(c);
+  const userEmail = await getAuthenticatedUserEmail(c);
 
   if (!userEmail) {
     return c.json(
