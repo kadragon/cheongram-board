@@ -1,0 +1,300 @@
+spec_id: SPEC-auth-email-password-1
+title: "Email + Password Authentication System"
+version: 1.0.0
+created: 2025-11-08
+status: active
+
+description: |
+  Implement a simple email + password authentication system for admin users.
+  This replaces Cloudflare Access with a custom JWT-based authentication.
+
+actors:
+  - name: Admin User
+    description: Church administrator who manages games and rentals
+    email: kangdongouk@gmail.com
+
+given_when_then:
+  - id: GWT-001
+    given: "An admin user with valid email and password"
+    when: "They submit login credentials"
+    then: "System returns a JWT token and stores it in the client"
+
+  - id: GWT-002
+    given: "An admin user with invalid credentials"
+    when: "They attempt to login"
+    then: "System returns 401 Unauthorized error"
+
+  - id: GWT-003
+    given: "A logged-in admin user"
+    when: "They make requests to admin endpoints"
+    then: "System validates JWT token and allows access"
+
+  - id: GWT-004
+    given: "A user without valid JWT token"
+    when: "They attempt to access admin endpoints"
+    then: "System returns 401 Unauthorized error"
+
+  - id: GWT-005
+    given: "A logged-in admin user"
+    when: "They click logout"
+    then: "System clears JWT token and redirects to login"
+
+acceptance_tests:
+  - id: TEST-auth-001
+    desc: "POST /api/auth/login with valid credentials returns JWT token"
+    given: "Valid admin email and password"
+    when: "POST /api/auth/login"
+    then: "Returns 200 with JWT token in response body"
+
+  - id: TEST-auth-002
+    desc: "POST /api/auth/login with invalid credentials returns 401"
+    given: "Invalid email or password"
+    when: "POST /api/auth/login"
+    then: "Returns 401 with error message"
+
+  - id: TEST-auth-003
+    desc: "Admin endpoints accept valid JWT token"
+    given: "Valid JWT token in Authorization header"
+    when: "POST /api/games with Bearer token"
+    then: "Returns 201 and creates game"
+
+  - id: TEST-auth-004
+    desc: "Admin endpoints reject invalid JWT token"
+    given: "Invalid or expired JWT token"
+    when: "POST /api/games with invalid token"
+    then: "Returns 401 Unauthorized"
+
+  - id: TEST-auth-005
+    desc: "Admin endpoints reject missing JWT token"
+    given: "No Authorization header"
+    when: "POST /api/games without token"
+    then: "Returns 401 Unauthorized"
+
+  - id: TEST-auth-006
+    desc: "Public endpoints work without authentication"
+    given: "No authentication token"
+    when: "GET /api/games"
+    then: "Returns 200 with game list"
+
+technical_requirements:
+  backend:
+    - id: REQ-BE-001
+      desc: "Implement POST /api/auth/login endpoint"
+      details: |
+        - Accept: { email: string, password: string }
+        - Validate credentials against ADMIN_EMAILS and ADMIN_PASSWORD
+        - Return: { token: string, expiresIn: number }
+
+    - id: REQ-BE-002
+      desc: "Implement JWT token generation"
+      details: |
+        - Use Web Crypto API (available in Cloudflare Workers)
+        - Token payload: { email: string, iat: number, exp: number }
+        - Expiration: 7 days
+        - Algorithm: HS256
+
+    - id: REQ-BE-003
+      desc: "Update requireAdmin middleware to validate JWT"
+      details: |
+        - Check Authorization header: "Bearer <token>"
+        - Verify JWT signature
+        - Check expiration
+        - Extract email and validate against ADMIN_EMAILS
+
+    - id: REQ-BE-004
+      desc: "Store admin password as Cloudflare secret"
+      details: |
+        - Secret name: ADMIN_PASSWORD
+        - Set via: wrangler secret put ADMIN_PASSWORD
+        - Use bcrypt hash (or simple comparison for MVP)
+
+    - id: REQ-BE-005
+      desc: "Store JWT secret as Cloudflare secret"
+      details: |
+        - Secret name: JWT_SECRET
+        - Generate: openssl rand -base64 32
+        - Set via: wrangler secret put JWT_SECRET
+
+  frontend:
+    - id: REQ-FE-001
+      desc: "Create Login page component"
+      details: |
+        - Email input field
+        - Password input field
+        - Login button
+        - Error message display
+        - Loading state
+
+    - id: REQ-FE-002
+      desc: "Implement AuthContext for state management"
+      details: |
+        - Store: { token: string | null, email: string | null, isAuthenticated: boolean }
+        - Methods: login(email, password), logout()
+        - Persist token in localStorage
+
+    - id: REQ-FE-003
+      desc: "Update API client to include JWT token"
+      details: |
+        - Read token from localStorage
+        - Add Authorization header: "Bearer <token>"
+        - Handle 401 responses by redirecting to login
+
+    - id: REQ-FE-004
+      desc: "Implement ProtectedRoute wrapper"
+      details: |
+        - Check if user is authenticated
+        - Redirect to /login if not authenticated
+        - Wrap all admin routes
+
+    - id: REQ-FE-005
+      desc: "Add logout button to admin UI"
+      details: |
+        - Clear localStorage
+        - Reset AuthContext
+        - Redirect to home page
+
+security_considerations:
+  - id: SEC-001
+    desc: "Password storage"
+    note: |
+      For MVP: Store plain password in Cloudflare secret (single admin user)
+      Future: Use bcrypt hashing for multiple admins
+
+  - id: SEC-002
+    desc: "JWT secret"
+    note: "Use strong random secret, never commit to git"
+
+  - id: SEC-003
+    desc: "Token expiration"
+    note: "7 days expiration, implement token refresh in future if needed"
+
+  - id: SEC-004
+    desc: "HTTPS only"
+    note: "Ensure all traffic uses HTTPS (Cloudflare handles this)"
+
+  - id: SEC-005
+    desc: "CORS configuration"
+    note: "Only allow crb.kadragon.work origin in production"
+
+environment_variables:
+  development:
+    - ADMIN_EMAILS=kangdongouk@gmail.com
+    - ADMIN_PASSWORD=<dev_password>
+    - JWT_SECRET=<dev_secret>
+    - NODE_ENV=development
+
+  production:
+    - ADMIN_EMAILS=kangdongouk@gmail.com (Cloudflare secret)
+    - ADMIN_PASSWORD=<secure_password> (Cloudflare secret)
+    - JWT_SECRET=<secure_random_secret> (Cloudflare secret)
+    - NODE_ENV=production
+
+api_endpoints:
+  - method: POST
+    path: /api/auth/login
+    auth_required: false
+    request_body:
+      email: string
+      password: string
+    response_success:
+      status: 200
+      body:
+        data:
+          token: string
+          email: string
+          expiresIn: number
+        meta:
+          timestamp: string
+    response_error:
+      status: 401
+      body:
+        error:
+          code: UNAUTHORIZED
+          message: Invalid credentials
+          userMessage: 이메일 또는 비밀번호가 올바르지 않습니다
+
+  - method: POST
+    path: /api/auth/logout
+    auth_required: true
+    description: "Optional endpoint, logout is handled client-side"
+    response_success:
+      status: 200
+      body:
+        data:
+          message: Logged out successfully
+        meta:
+          timestamp: string
+
+implementation_order:
+  - step: 1
+    task: "Backend: Add JWT utilities (sign, verify)"
+    files:
+      - api/src/lib/auth/jwt.ts
+
+  - step: 2
+    task: "Backend: Implement /api/auth/login endpoint"
+    files:
+      - api/src/routes/auth.ts
+
+  - step: 3
+    task: "Backend: Update requireAdmin middleware to validate JWT"
+    files:
+      - api/src/lib/auth/middleware.ts
+
+  - step: 4
+    task: "Backend: Add secrets to Cloudflare"
+    commands:
+      - wrangler secret put ADMIN_PASSWORD --env production
+      - wrangler secret put JWT_SECRET --env production
+
+  - step: 5
+    task: "Frontend: Create AuthContext"
+    files:
+      - web/src/contexts/AuthContext.tsx
+
+  - step: 6
+    task: "Frontend: Create Login page"
+    files:
+      - web/src/pages/LoginPage.tsx
+
+  - step: 7
+    task: "Frontend: Update API client to include JWT"
+    files:
+      - web/src/lib/api-client.ts
+
+  - step: 8
+    task: "Frontend: Implement ProtectedRoute"
+    files:
+      - web/src/components/ProtectedRoute.tsx
+
+  - step: 9
+    task: "Frontend: Update routing to use ProtectedRoute"
+    files:
+      - web/src/App.tsx
+
+  - step: 10
+    task: "Test and deploy"
+
+dependencies:
+  npm_packages:
+    - name: "@tsndr/cloudflare-worker-jwt"
+      purpose: "JWT signing and verification for Cloudflare Workers"
+      installation: "cd api && npm install @tsndr/cloudflare-worker-jwt"
+
+linked_tasks:
+  - TASK-auth-001
+
+notes: |
+  This is a simple authentication system for a single-admin application.
+  Future improvements:
+  - Multiple admin users with individual passwords
+  - Password hashing with bcrypt
+  - Token refresh mechanism
+  - Rate limiting on login endpoint
+  - Account lockout after failed attempts
+  - Password reset functionality
+
+trace:
+  spec_id: SPEC-auth-email-password-1
+  created_by: autonomous-agent
+  created_at: 2025-11-08

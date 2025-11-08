@@ -25,6 +25,8 @@
   "author": "kadragon",
   "license": "ISC",
   "dependencies": {
+    "@hono/zod-validator": "^0.7.4",
+    "@tsndr/cloudflare-worker-jwt": "^3.2.0",
     "hono": "^4.6.14",
     "node-html-parser": "^7.0.1",
     "zod": "^4.0.5"

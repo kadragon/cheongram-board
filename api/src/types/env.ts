@@ -16,6 +16,8 @@ export interface Env {
   // Environment variables
   NODE_ENV: string;
   ADMIN_EMAILS: string; // Comma-separated list of admin emails
+  ADMIN_PASSWORD: string; // Admin password for authentication
+  JWT_SECRET: string; // Secret key for JWT signing
   ALLOW_DEV_HEADER?: string;
 
   // Optional: KV for future use

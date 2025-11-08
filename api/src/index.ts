@@ -8,6 +8,7 @@ import { errorHandler } from './lib/errors';
 import gamesRouter from './routes/games';
 import rentalsRouter from './routes/rentals';
 import scraperRouter from './routes/scrape';
+import authRouter from './routes/auth';
 
 /**
  * Cheongram Board Game Rental - Unified Workers
@@ -31,9 +32,12 @@ const api = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // CORS middleware (API only)
 api.use('*', cors({
-  origin: '*', // TODO: Configure proper CORS for production
+  origin: ['https://crb.kadragon.work', 'http://localhost:5173', 'http://localhost:3000'],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-Dev-User-Email', 'CF-Access-Authenticated-User-Email'],
+  exposeHeaders: ['Content-Length', 'X-Request-Id'],
+  credentials: true,
+  maxAge: 86400, // 24 hours
 }));
 
 // Health check
@@ -48,6 +52,7 @@ api.get('/', (c) => {
 });
 
 // API routes
+api.route('/auth', authRouter);
 api.route('/games', gamesRouter);
 api.route('/rentals', rentalsRouter);
 api.route('/scrape', scraperRouter);
