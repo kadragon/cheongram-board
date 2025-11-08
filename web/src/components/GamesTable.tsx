@@ -38,12 +38,17 @@ export function GamesTable() {
   };
 
   const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this game?')) {
+      return;
+    }
+
     try {
       await apiClient.deleteGame(id);
       fetchGames();
     } catch (error: any) {
       console.error("Failed to delete game:", error);
-      alert(`Failed to delete game: ${error.message || 'Unknown error'}`);
+      const errorMessage = error?.error?.userMessage || error?.error?.message || error?.message || 'Unknown error';
+      alert(`Failed to delete game: ${errorMessage}`);
     }
   };
 
