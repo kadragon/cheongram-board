@@ -6,11 +6,12 @@
   "scripts": {
     "dev:web": "cd web && npm run dev",
     "dev:api": "cd api && npm run dev",
+    "dev": "wrangler dev",
+    "build": "cd web && npm run build && cd ../api && npm run typecheck",
+    "deploy": "npm run build && wrangler deploy",
     "lint": "npm run lint -ws --if-present",
     "typecheck": "npm run typecheck -ws --if-present",
-    "prepare": "husky",
-    "deploy:staging": "cd api && npm run deploy:staging",
-    "deploy:production": "cd api && npm run deploy:production"
+    "prepare": "husky"
   },
   "keywords": [
     "cloudflare",
