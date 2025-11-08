@@ -112,6 +112,93 @@ class ApiClient {
     }
   }
 
+  /**
+   * Request method for endpoints that return 204 No Content (e.g., DELETE operations)
+   * This method is type-safe as it explicitly returns void for operations without response body
+   */
+  private async requestWithoutBody(
+    endpoint: string,
+    options?: RequestInit
+  ): Promise<ApiResponse<void>> {
+    const url = `${this.baseUrl}${endpoint}`;
+
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    };
+
+    // Add JWT token from localStorage if available
+    const token = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (token) {
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    }
+
+    // Add dev header in development (fallback for local testing)
+    if (import.meta.env.DEV && !token) {
+      (headers as Record<string, string>)['X-Dev-User-Email'] = 'kangdongouk@gmail.com';
+    }
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
+
+      // Handle 204 No Content responses
+      if (response.status === 204) {
+        return {
+          data: undefined as void,
+          meta: { timestamp: new Date().toISOString() }
+        };
+      }
+
+      // For non-204 responses, try to parse JSON
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle 401 Unauthorized - redirect to login
+        if (response.status === 401 && endpoint !== '/api/auth/login') {
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+          localStorage.removeItem('cheongram_auth_email');
+
+          const errorData = data as ApiError;
+          const isTokenExpired = errorData.error?.code === 'UNAUTHORIZED' ||
+                                 errorData.error?.message?.includes('expired');
+
+          if (isTokenExpired) {
+            console.warn('Session expired, redirecting to login');
+          }
+
+          window.location.href = '/login';
+        }
+
+        throw data as ApiError;
+      }
+
+      return data as ApiResponse<void>;
+    } catch (error) {
+      if ((error as ApiError).error) {
+        throw error;
+      }
+
+      const errorMessage = error instanceof Error ? error.message : 'Network error';
+      let userMessage = '네트워크 오류가 발생했습니다';
+
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ERR_BLOCKED_BY_CLIENT')) {
+        userMessage = '요청이 차단되었습니다. 광고 차단기나 브라우저 확장 프로그램을 확인해주세요.';
+      }
+
+      throw {
+        error: {
+          code: 'NETWORK_ERROR',
+          message: errorMessage,
+          userMessage,
+          timestamp: new Date().toISOString(),
+        },
+      } as ApiError;
+    }
+  }
+
   // Games API
   async listGames(params?: {
     query?: string;
@@ -155,7 +242,7 @@ class ApiClient {
   }
 
   async deleteGame(id: number) {
-    return this.request<void>(`/api/games/${id}`, {
+    return this.requestWithoutBody(`/api/games/${id}`, {
       method: 'DELETE',
     });
   }
@@ -198,7 +285,7 @@ class ApiClient {
   }
 
   async deleteRental(id: number) {
-    return this.request<void>(`/api/rentals/${id}`, {
+    return this.requestWithoutBody(`/api/rentals/${id}`, {
       method: 'DELETE',
     });
   }

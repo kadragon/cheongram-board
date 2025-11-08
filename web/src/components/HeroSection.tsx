@@ -31,12 +31,6 @@ export function HeroSection({ totalGames, availableGames, isLoading = false }: H
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-4 tracking-tight">
             🎲 청람보드
           </h1>
-          <p className="text-lg md:text-xl text-white/90 font-medium max-w-2xl mx-auto">
-            청람교회 보드게임 대여 서비스
-          </p>
-          <p className="text-sm md:text-base text-white/70 mt-2 max-w-xl mx-auto">
-            다양한 보드게임을 무료로 대여하고 즐거운 시간을 보내세요
-          </p>
         </motion.div>
 
         {/* Statistics Grid */}
