@@ -6,11 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "build:staging": "tsc && vite build --mode staging",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
-    "deploy:staging": "npm run build:staging && wrangler pages deploy dist --project-name=cheongram-board-frontend-staging",
-    "deploy:production": "npm run build && wrangler pages deploy dist --project-name=cheongram-board-frontend"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.2",
