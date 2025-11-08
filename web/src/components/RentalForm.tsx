@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { apiClient } from "@/lib/api-client";
 
 export function RentalForm({
   initialData,
@@ -27,13 +28,25 @@ export function RentalForm({
     game_id: "",
   });
   const [games, setGames] = useState<any[]>([]);
+  const [isLoadingGames, setIsLoadingGames] = useState(true);
+  const [gamesError, setGamesError] = useState<string | null>(null);
+
+  const fetchGames = async () => {
+    setIsLoadingGames(true);
+    setGamesError(null);
+    try {
+      const result = await apiClient.listGames();
+      setGames(result.data);
+    } catch (error: any) {
+      console.error('Failed to fetch games:', error);
+      const errorMessage = error?.error?.userMessage || error?.error?.message || 'Failed to load games';
+      setGamesError(errorMessage);
+    } finally {
+      setIsLoadingGames(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchGames = async () => {
-      const response = await fetch("/api/games");
-      const data = await response.json();
-      setGames(data);
-    };
     fetchGames();
   }, []);
 
@@ -90,18 +103,45 @@ export function RentalForm({
       </div>
       <div>
         <Label htmlFor="game_id">Game</Label>
-        <Select onValueChange={handleSelectChange} value={formData.game_id}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select a game" />
-          </SelectTrigger>
-          <SelectContent>
-            {games.map((game) => (
-              <SelectItem key={game.id} value={game.id.toString()}>
-                {game.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {isLoadingGames ? (
+          <div className="flex items-center justify-center p-3 border rounded-md bg-muted/50">
+            <span className="text-sm text-muted-foreground">Loading games...</span>
+          </div>
+        ) : gamesError ? (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-3 border border-destructive/50 rounded-md bg-destructive/10">
+              <span className="text-sm text-destructive">{gamesError}</span>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={fetchGames}
+              className="w-full"
+            >
+              Retry
+            </Button>
+          </div>
+        ) : (
+          <Select onValueChange={handleSelectChange} value={formData.game_id}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a game" />
+            </SelectTrigger>
+            <SelectContent>
+              {games.length === 0 ? (
+                <div className="p-2 text-sm text-muted-foreground text-center">
+                  No games available
+                </div>
+              ) : (
+                games.map((game) => (
+                  <SelectItem key={game.id} value={game.id.toString()}>
+                    {game.title}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        )}
       </div>
       <div className="flex justify-end">
         <Button type="submit" disabled={isSubmitting}>
