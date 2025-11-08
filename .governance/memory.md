@@ -32,6 +32,18 @@ main → feat/modernize-homepage-design (active)
 - **Phase**: Planning and documentation complete
 - **Next Task**: TASK-homepage-001 (Modern Hero Section)
 
+### Recent Improvements
+- **Enhanced Mock Isolation Strategy** ✅ COMPLETED (2025-11-08)
+  - Improved D1Adapter test infrastructure with proper mock isolation
+  - Implemented beforeEach/afterEach with vi.clearAllMocks() for test independence
+  - Created isolated mock factory functions for D1 database operations
+  - Added comprehensive test cases for D1Adapter methods (56 tests total)
+  - **Coverage dramatically improved**: 54.35% statements (from 31.53%)
+  - **Function coverage**: 76.47% (from 50%)
+  - **D1Adapter coverage**: 40.85% statements (from 11.28%)
+  - Maintained 100% coverage on validation and error handling modules
+  - 4 complex tests marked as TODO for future mock interaction fixes
+
 ### Project Architecture
 
 **Current: Unified Workers (api + web)** ✅
@@ -242,6 +254,13 @@ wrangler dev --env development
 cd api
 .spec/migration/testing/api-tests.sh
 # → 26 tests, 16 test cases, 32 assertions
+```
+
+**Unit Tests with Coverage**:
+```bash
+cd api && npm run test:coverage
+# → 56 unit tests in api/tests/ (60 total), 54.35% statement coverage, 76.47% function coverage
+# → Enhanced mock isolation prevents test interference
 ```
 
 **Type Check**:

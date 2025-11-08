@@ -276,6 +276,25 @@ tasks:
       - TASK-backlog-010
     reference: .tasks/scripts/setup-cloudflare-access.sh
 
+  - id: TASK-test-coverage-001
+    title: Setup Test Coverage Infrastructure
+    trace: SPEC-test-coverage-improvement-1
+    description: |
+      Install @vitest/coverage-v8 and configure test coverage reporting.
+      Create initial unit tests for critical business logic.
+    acceptance_criteria:
+      - @vitest/coverage-v8 installed and configured
+      - npm run test:coverage works
+      - Basic unit tests created for key functions
+      - Coverage report generated
+    priority: medium
+    estimated_effort: 2 hours
+    status: pending
+    dependencies: []
+    test_refs:
+      - TEST-coverage-setup-1
+      - TEST-unit-tests-1
+
   - id: TASK-backlog-007
     title: Document rollback procedures
     trace: SPEC-migration-supabase-to-cloudflare-1
