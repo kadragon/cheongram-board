@@ -1,6 +1,10 @@
-import { useEffect, useState } from 'react';
+// Trace: SPEC-homepage-modernization-1, TASK-homepage-001, TASK-homepage-002
+
+import { useEffect, useState, useMemo } from 'react';
 import { GameList } from '@/components/GameList';
 import { AuthButton } from '@/components/AuthButton';
+import { HeroSection } from '@/components/HeroSection';
+import { Header } from '@/components/Header';
 import { apiClient } from '@/lib/api-client';
 
 export default function HomePage() {
@@ -27,44 +31,69 @@ export default function HomePage() {
     fetchGames();
   }, []);
 
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const total = games.length;
+    const available = games.filter(game => !game.is_rented).length;
+    return { total, available };
+  }, [games]);
+
   if (isLoading) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="text-center my-8">
-          <h1 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-500 to-teal-400 bg-clip-text text-transparent">
-            청람보드
-          </h1>
+      <>
+        <Header />
+        <div className="container mx-auto p-4">
+          <HeroSection totalGames={0} availableGames={0} />
+
+          <div className="flex justify-between items-center mb-6 mt-8">
+            <div>
+              <h2 className="text-3xl font-bold mb-1">전체 게임</h2>
+              <p className="text-sm text-muted-foreground">로딩 중...</p>
+            </div>
+            <AuthButton />
+          </div>
+
+          <GameList games={null} isAdmin={false} isLoading={true} />
         </div>
-        <div className="text-center">로딩 중...</div>
-      </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="text-center my-8">
-          <h1 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-500 to-teal-400 bg-clip-text text-transparent">
-            청람보드
-          </h1>
+      <>
+        <Header />
+        <div className="container mx-auto p-4">
+          <HeroSection totalGames={0} availableGames={0} />
+          <div className="text-center py-8">
+            <div className="text-red-500 text-lg">⚠️ 오류 발생</div>
+            <p className="text-muted-foreground mt-2">{error}</p>
+          </div>
         </div>
-        <div className="text-center text-red-500">Error: {error}</div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="text-center my-8">
-        <h1 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-500 to-teal-400 bg-clip-text text-transparent">
-          청람보드
-        </h1>
+    <>
+      <Header />
+      <div className="container mx-auto p-4">
+        <HeroSection totalGames={stats.total} availableGames={stats.available} />
+
+        {/* Section Header */}
+        <div className="flex justify-between items-center mb-6 mt-8">
+          <div>
+            <h2 className="text-3xl font-bold mb-1">전체 게임</h2>
+            <p className="text-sm text-muted-foreground">
+              총 {stats.total}개의 게임 · {stats.available}개 대여 가능
+            </p>
+          </div>
+          <AuthButton />
+        </div>
+
+        {/* Game List */}
+        <GameList games={games} isAdmin={false} />
       </div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">보유 게임 정보</h2>
-        <AuthButton />
-      </div>
-      <GameList games={games} isAdmin={false} />
-    </div>
+    </>
   );
 }
