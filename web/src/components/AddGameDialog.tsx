@@ -2,16 +2,17 @@
 
 import { useState } from 'react';
 import {
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { apiClient } from "@/lib/api-client";
 export function AddGameDialog() {
   const [url, setUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -22,30 +23,12 @@ export function AddGameDialog() {
     setIsSubmitting(true);
 
     try {
-      // 1. Scrape game data from the provided URL
-      const scrapeResponse = await fetch('/api/scrape', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-      });
+      // 1. Scrape game data from the provided URL using apiClient
+      const scrapeResponse = await apiClient.scrapeGameInfo(url);
+      const gameData = scrapeResponse.data;
 
-      if (!scrapeResponse.ok) {
-        throw new Error('게임 정보 가져오기에 실패했습니다.');
-      }
-
-      const gameData = await scrapeResponse.json();
-
-      // 2. Add the scraped game to the database
-      const addGameResponse = await fetch('/api/games', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(gameData),
-      });
-
-      if (!addGameResponse.ok) {
-        const errorData = await addGameResponse.json();
-        throw new Error(errorData.error || '게임 추가에 실패했습니다.');
-      }
+      // 2. Add the scraped game to the database using apiClient
+      await apiClient.createGame(gameData);
 
       // Success
       alert('게임이 성공적으로 추가되었습니다.');
@@ -54,7 +37,9 @@ export function AddGameDialog() {
 
     } catch (error: any) {
       console.error(error);
-      alert(error.message);
+      // Handle ApiError format
+      const errorMessage = error?.error?.userMessage || error?.message || '게임 추가에 실패했습니다.';
+      alert(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
