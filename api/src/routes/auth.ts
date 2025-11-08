@@ -33,15 +33,30 @@ app.post('/login', zValidator('json', loginSchema), async (c) => {
 
   // Get admin credentials from environment
   const adminEmails = c.env.ADMIN_EMAILS || '';
-  const adminPassword = c.env.ADMIN_PASSWORD || '';
+  const adminPassword = c.env.ADMIN_PASSWORD;
   const jwtSecret = c.env.JWT_SECRET;
 
+  // Fail fast if critical secrets are missing
   if (!jwtSecret) {
     return c.json(
       {
         error: {
           code: 'INTERNAL_SERVER_ERROR',
           message: 'JWT secret not configured',
+          userMessage: 'Authentication system is not properly configured',
+          timestamp: new Date().toISOString(),
+        },
+      },
+      500
+    );
+  }
+
+  if (!adminPassword) {
+    return c.json(
+      {
+        error: {
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Admin password not configured',
           userMessage: 'Authentication system is not properly configured',
           timestamp: new Date().toISOString(),
         },
