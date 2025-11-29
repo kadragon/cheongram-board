@@ -9,8 +9,9 @@
     "dev": "wrangler dev",
     "build": "cd web && npm run build && cd ../api && npm run typecheck",
     "deploy": "npm run build && wrangler deploy",
-    "lint": "npm run lint -ws --if-present",
-    "typecheck": "npm run typecheck -ws --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
     "prepare": "husky"
   },
   "keywords": [
