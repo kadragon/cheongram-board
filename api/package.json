@@ -10,8 +10,9 @@
     "build:web": "cd ../web && npm run build",
     "deploy": "npm run build && wrangler deploy",
     "typecheck": "tsc --noEmit",
-    "test": "vitest",
-    "test:coverage": "vitest --coverage"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "cloudflare",
